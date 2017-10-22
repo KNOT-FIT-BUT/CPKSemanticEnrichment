@@ -1,0 +1,22 @@
+Dulezite
+=======================================================================
+1) Pro vytvoreni nastroje figav1.0 (verze CEDAR) vyuzijte programu make.
+=======================================================================
+
+fungujuce parametre:
+        -a - autocomplete
+        -o - overlapping
+        -p - vypisuje output
+        -d FILE - subor zo slovnikom, ak je definova n, tak ide o namelsit, bez neho je to ulozena tria
+        -n - indikuje ci v d je namelist
+        -w FILE - ulozenie pouzitej trie do suboru
+
+Popis souboru
+=============
+figav1.0 -> hlavny program, treba dat parameter -p pre vypisovanie inak nic nevypisuje
+main.cpp -> main programu
+figa_cedar.cpp
+figa_cedar.h
+cedar.h -> C++ implementation of Efficiently-updatable Double ARray trie
+kb_loader_fast.cc -> nacitani KB.all do Ceckoveho pole
+kb_loader_slow.cc -> vice info v Makefile

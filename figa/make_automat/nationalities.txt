@@ -1,0 +1,263 @@
+Afghan
+African
+Albanian
+Algerian
+American
+Andorran
+Angolan
+Arabian
+Aragonian
+Argentine
+Argentinean
+Armenian
+Aruban
+Athenian
+Aussie
+Australian
+Austrasia
+Austrian
+Azerbaijani
+Babylonian
+Bahaman
+Bahraini
+Bajun
+Bangladeshi
+Barbadian
+Basotho
+Batswana
+Bavarian
+Belarusian
+Belgian
+Belizean
+Beninese
+Bermudan
+Bhutanese
+Bohemian
+Bolivian
+Bosnian
+Brazilian
+British
+Bruneian
+Bulgarian
+Burkinabe
+Burkinabé
+Burmese
+Burundian
+Byzantine
+Cambodian
+Cameroonian
+Canadian
+Cape Verdean
+Central African
+Chadian
+Chechen
+Chilean
+Chinese
+Colombian
+Comoran
+Confederate
+Congolese
+Costa Rican
+Croat
+Croatian
+Cuban
+Cypriot
+Czech
+Czechoslovakian
+Dane
+Danish
+Djibouti
+Dominican
+Dutch
+East American
+East Timorese
+Ecuadorean
+Egyptian
+Emirian
+English
+Equatoguinean
+Equatorial Guinean
+Eritrean
+Estonian
+Ethiopian
+Fijian
+Filipino
+Finn
+Finnish
+French
+French Polynesian
+Gabonese
+Gambian
+Georgian
+German
+Ghanaian
+Greek
+Grenadian
+Guadeloupean
+Guamanian
+Guatemalan
+Guinea-Bissauan
+Guinean
+Guyanese
+Haitian
+Hawaiian
+Herzegovinian
+Hollander
+Honduran
+Hongkongese
+Hungarian
+Icelander
+I-Kiribati
+Indian
+Indonesian
+Iranian
+Iraqi
+Irish
+Israeli
+Italian
+Ivoirian
+Ivorian
+Jamaican
+Japanese
+Jordanian
+Kazakhstani
+Kenyan
+Kirghiz
+Kittian
+Kiwi
+Korean
+Kuwaiti
+Kyrgyz
+Lao
+Laotian
+Latvian
+Lebanese
+Liberian
+Libyan
+Liechtensteiner
+Lithuanian
+Luxembourger
+Macedonian
+Malagasy
+Malawian
+Malaysian
+Maldivan
+Malian
+Maltese
+Marshallese
+Mauritanian
+Mauritian
+Mexican
+Moldovan
+Monacan
+Monegasque
+Mongolian
+Montenegrin
+Moroccan
+Mosotho
+Motswana
+Mozambican
+Myanmarese
+Namibian
+Nauruan
+Nepalese
+Netherlander
+Nevisian
+New Guinean
+Nicaraguan
+Nigerian
+Nigerien
+Ni-Vanuatu
+North American
+Northern Irish
+North Korean
+Norwegian
+Omani
+Ottoman
+Pakistani
+Palauan
+Palestinian
+Panamanian
+Papua New Guinean
+Paraguayan
+Peruvian
+Polish
+Polynesian
+Portuguese
+Prussian
+Puerto Rican
+Qatari
+Rhodesian
+Roman
+Romanian
+Russian
+Rwandan
+Saint Lucian
+Salvadoran
+Sammarinese
+Samoan
+San Marinese
+Saudi
+Saudi Arabian
+Saxon
+Scottish
+Senegalese
+Serbian
+Seychellois
+Sicilian
+Sierra Leonean
+Singaporean
+Slovak
+Slovakian
+Slovene
+Slovenian
+Solomon Islander
+Somali
+South African
+South American
+South Korean
+South Sudanese
+Soviet
+Spaniard
+Spanish
+Spartan
+Sri Lankan
+Sudanese
+Surinamer
+Swazi
+Swede
+Swedish
+Swiss
+Syrian
+Tadzhik
+Taiwanese
+Tajik
+Tanzanian
+Thai
+Tobagonian
+Togolese
+Tongan
+Trinidadian
+Tunisian
+Turk
+Turkish
+Turkmen
+Tuvaluan
+Ugandan
+Ukrainian
+Uruguayan
+Uzbek
+Uzbekistani
+Venezuelan
+Vietnamese
+Welsh
+West American
+Western Roman
+West German
+Yemeni
+Yemenite
+Yugoslavian
+Zairian
+Zambian
+Zimbabwean
+Zulu

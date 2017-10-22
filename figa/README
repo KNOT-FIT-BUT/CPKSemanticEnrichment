@@ -1,0 +1,37 @@
+Po vyhledavani entit pouzijte program figav1.0.
+Program podporuje dva formaty automatu: CEDAR (pripona .ct) a DARTS (pripona .dct)
+Typy automatu jsou rozliseny podle pripony.
+Konecny automat automata.{ct|dct} obsahuje zaznamy pro aktualni verzi KB.all
+Automaty *_automata.{ct|dct} su verzie pre dohladavanie entit pomocou autocomplete (-a).
+=====================================================================
+Nazorna ukazka:
+===============
+ ./figav1.0 -d automata.{ct|dct} -p <<< "A Alewijn"
+
+ index_v_KB.all    poc. offset    kon. offset    nazev_entity
+ 3270103           1              9              A Alewijn
+
+=====================================================================
+Priklad spusteni:
+ ./figav1.0 -d automata.{ct|dct} < soubor
+ ./figav1.0 -d automata.{ct|dct} -p <<< "Paris" (prepinac "-p" -> vypis na obrazovku)
+ ./figav1.0 -d automata.{ct|dct} -f soubor
+ ./figav1.0 -d automata.{ct|dct} -f soubor -p
+ ./figav1.0 -a -d *_automata.{ct|dct} -p <<< "nazev"
+ ./figav1.0 -a -d *_automata.{ct|dct} -p < "nazev_souboru"
+ ./figav1.0 -a -d *_automata.{ct|dct} -p -f "nazev_souboru"
+=====================================================================
+Popis souboru
+=============
+automata.{ct|dct} -> konecny automat (KA); pouzitie vid. vyssie
+*_automata.{ct|dct} -> konecne automaty (KA)
+./figav1.0 -> program, ktory vyhladava entity vo vstupnom texte
+./sources/ -> priecinok so subormi pre vytvorenie programu figav1.0
+./make_automat/ -> priecinok so soubormi pre vytvorenie konecnych automatov
+
+=====================================================================
+
+ Viac informacii najdete na:
+  https://knot.fit.vutbr.cz/wiki/index.php/Ner4		(CEDAR/DARTS Figa)
+  https://knot.fit.vutbr.cz/wiki/index.php/Decipher_fsa	(Stara Figa)
+

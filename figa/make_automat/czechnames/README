@@ -1,0 +1,15 @@
+Obsah složky je následující:
+
+namegen.py - skript pro generování všech tvarů jmen a vstupu pro odhadovač vzorů
+
+soubory se jmény: 
+persons_from_mrc.txt
+Smil_Flaska_z_Pardubic.MF
+KB_cs.all
+artists.MF
+names.nogen.MF - soubor se jmény pro která to prozatím nefunguje
+
+soubory.lntrf slouží jako vstup pro odhadovač vzorů
+guesser explainer jsou soubory odhadovače vzorů
+
+soubory lpn jsou výstup odhadovače vzorů
