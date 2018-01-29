@@ -20,12 +20,16 @@ from KB_shm import *
 '''
 
 import os
+import sys
 from ctypes import CDLL, c_char, c_char_p, c_int, c_uint, c_void_p, POINTER, byref
 
 # Získání absolutní cesty k adresáři ve kterém je tento soubor.
 script_dir = os.path.dirname(os.path.abspath(__file__))
 # Načtení dynamické knihovny "libKB_shm.so"
-libKB_shm = CDLL( os.path.join(script_dir, "libKB_shm.so") )
+libKB_shm_path = os.path.join(script_dir, "libKB_shm.so")
+if not os.path.isfile(libKB_shm_path):
+	sys.exit("Could not found " + libKB_shm_path)
+libKB_shm = CDLL( libKB_shm_path )
 
 # Pro jazyky C/C++
 '''
