@@ -2,7 +2,7 @@
 
 # Author: Lubomir Otrusina, iotrusina@fit.vutbr.cz
 
-export LC_ALL="C"
+export LC_ALL="C.UTF-8"
 
 # default values
 KB="KBstatsMetrics.all"
