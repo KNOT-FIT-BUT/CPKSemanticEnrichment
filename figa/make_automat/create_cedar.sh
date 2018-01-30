@@ -29,6 +29,9 @@ usage()
     echo ""
 }
 
+LAUNCHED=$0
+KB_WORKDIR=$PWD
+
 while [ "$1" != "" ]; do
     PARAM=`echo $1 | awk -F= '{print $1}'`
     VALUE=`echo $1 | awk -F= '{print $2}'`
@@ -76,7 +79,6 @@ if $CEDAR && $DARTS ; then
   usage
   exit
 elif [ ! -f "$KB" ]; then
-  TMP_MSG=""
   echo "ERROR: Could not found KB on path: ${KB}" >&2
   if ! $KB_GIVEN ; then
     echo "Did you forget to set the parameter \"-k\"? (Default \"${KB}\" was used.)\n" >&2
@@ -87,6 +89,13 @@ elif [ ! -f "$KB" ]; then
 elif $DARTS ; then
   EXT=".dct"
 fi
+
+#=====================================================================
+# zmena spousteci cesty na tu, ve ktere se nachazi create_cedar.sh
+cd `dirname "${LAUNCHED}"`
+# ale soucasne je treba zmenit cestu ke KB, jinak bychom problem posunuli jinam
+KB="${KB_WORKDIR}/${KB}"
+
 
 #=====================================================================
 python get_persons_with_genders.py -p "$KB"
