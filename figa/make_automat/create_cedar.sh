@@ -98,7 +98,7 @@ KB="${KB_WORKDIR}/${KB}"
 
 
 #=====================================================================
-python get_persons_with_genders.py -p "$KB"
+python get_persons_with_genders.py -p "$KB" > persons_with_genders
 python3 czechnames/namegen.py -o czechnames.out persons_with_genders
 
 
