@@ -16,7 +16,7 @@ KB je najskor potrebné nakopírovať do zložky pomocou príkazu:
 
 `cp /mnt/minerva1/nlp/projects/entity_kb_czech3/kb/KB_cs.all .`
 
-Po presune slúži pre prípravu KB skript `prepare_data`. Pred použitím je potrebné zabezpečiť aby sa v zložke nachádzali štatistiky získané z wikipedie. Tie sú aktuálne uložené v súbore `wiki_stats`. V prípade novšej verzie je potrebné tieto štatistiky nakopírovať pomocou príkazu:
+Po presune slúži pre prípravu KB skript `prepare_data.sh`. Pred použitím je potrebné zabezpečiť aby sa v zložke nachádzali štatistiky získané z wikipedie. Tie sú aktuálne uložené v súbore `wiki_stats`. V prípade novšej verzie je potrebné tieto štatistiky nakopírovať pomocou príkazu:
 
 `cp cesta_k_statistikam wiki_stats`
 
