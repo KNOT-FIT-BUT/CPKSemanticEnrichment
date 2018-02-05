@@ -4,6 +4,7 @@ export LC_ALL="C"
 
 # default values
 KB="KBstatsMetrics.all"
+KB_GIVEN=false
 CEDAR=false
 DARTS=false
 EXT=".ct"
@@ -38,6 +39,7 @@ while [ "$1" != "" ]; do
             ;;
         -k | --knowledge-base)
             KB=$VALUE
+            KB_GIVEN=true
             ;;
         *)
             echo "ERROR: unknown parameter \"$PARAM\""
@@ -50,6 +52,14 @@ done
 
 if $CEDAR && $DARTS ; then
   usage
+  exit
+elif [ ! -f "$KB" ]; then
+  echo "ERROR: Could not found KB on path: ${KB}" >&2
+  if ! $KB_GIVEN ; then
+    echo "Did you forget to set the parameter \"-k\"? (Default \"${KB}\" was used.)\n" >&2
+    
+    usage
+  fi
   exit
 elif $DARTS ; then
   EXT=".dct"
