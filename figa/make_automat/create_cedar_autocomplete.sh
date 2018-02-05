@@ -23,6 +23,9 @@ usage()
     echo ""
 }
 
+LAUNCHED=$0
+KB_WORKDIR=$PWD
+
 while [ "$1" != "" ]; do
     PARAM=`echo $1 | awk -F= '{print $1}'`
     VALUE=`echo $1 | awk -F= '{print $2}'`
@@ -64,6 +67,12 @@ elif [ ! -f "$KB" ]; then
 elif $DARTS ; then
   EXT=".dct"
 fi
+
+#=====================================================================
+# zmena spousteci cesty na tu, ve ktere se nachazi create_cedar.sh
+cd `dirname "${LAUNCHED}"`
+# ale soucasne je treba zmenit cestu ke KB, jinak bychom problem posunuli jinam
+KB="${KB_WORKDIR}/${KB}"
 
 #======================================================================
 # vytvorenie zoznamu klucov entit v KB a vyhodenie fragmentov zo zoznamu
