@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export LC_ALL="C"
+export LC_ALL="C.UTF-8"
 
 # default values
 KB="KBstatsMetrics.all"
