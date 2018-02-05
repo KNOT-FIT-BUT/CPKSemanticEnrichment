@@ -41,6 +41,16 @@ while [ "$1" != "" ]; do
             DARTS=true
             ;;
         -k | --knowledge-base)
+            if [ "$PARAM" = "-k" ]; then
+              if [ "$2" = "" ]; then
+                usage
+                exit
+              else
+                VALUE="$2"
+                shift
+              fi
+            fi
+            
             KB=$VALUE
             KB_GIVEN=true
             ;;
