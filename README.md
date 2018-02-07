@@ -1,5 +1,10 @@
 # CPKSemanticEnrichment
 
+# Příprava nástrojů
+Před započetím veškeré práce je potřeba mít zkompilované nástroje, které jsou potřeba v dalších krocích. V hlavním adresáři je třeba spustit příkaz: 
+
+`make`
+
 # KnowledgeBase
 
 Pre svoju činnosť nástroj vyžaduje českú KnowledgeBase. KBje uložená vo formáte TSV, pričom na každom riadku sú uložené informácie o jednej entite. Bližšie informácie o tvorbe KB a význame jednotlivých stĺpcov sú na wiki stránke:
