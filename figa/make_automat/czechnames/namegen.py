@@ -294,7 +294,6 @@ def load(unknownargs):
 			if line:
 				names.append(name(line))
 		except Exception as e:
-			print("Load")
 			sys.stderr.write(str(e)+"\n")
 	return names
 	
