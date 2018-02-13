@@ -271,7 +271,7 @@ def get_gender(jmeno):
 			if not gender:
 				gender = g
 			elif gender != g:
-				sys.stderr.write("Warning, inconsistent gender\n")
+				sys.stderr.write("Warning, inconsistent gender (" + jmeno[-1] + ") for name: " + ' '.join(jmeno[:-1]) + "\n")
 		elif word[-3:] == "ová":
 			return "F"
 	if not gender:
@@ -290,8 +290,11 @@ def load(unknownargs):
 	names = list()
 	for line in fileinput.input(unknownargs):
 		try:
-			names.append(name(line))
+			line = line.strip()
+			if line:
+				names.append(name(line))
 		except Exception as e:
+			print("Load")
 			sys.stderr.write(str(e)+"\n")
 	return names
 	
