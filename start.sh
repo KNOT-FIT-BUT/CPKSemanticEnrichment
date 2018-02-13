@@ -5,6 +5,9 @@ SAVE_PARAMS=$*
 LOG=false
 ONLY_DICT=false
 
+# saved values
+LAUNCHED=$0
+
 #=====================================================================
 # nastavovani parametru prikazove radky
 
@@ -41,6 +44,9 @@ while [ "$1" != "" ]; do
     shift
 done
 
+# zmena spousteci cesty na tu, ve ktere se nachazi start.sh
+cd `dirname "${LAUNCHED}"`
+
 if $LOG; then
 	rm -f start.sh.fifo.stdout start.sh.fifo.stderr start.sh.fifo.stdmix
 	mkfifo start.sh.fifo.stdout start.sh.fifo.stderr start.sh.fifo.stdmix
@@ -75,6 +81,5 @@ echo
 #=====================================================================
 # creating automaton for NER
 
-cd figa/make_automat
 echo "creating CedarTree for NER"
-./create_cedar.sh -c -k ../../KBstatsMetrics.all
+./figa/make_automat/create_cedar.sh -c -k KBstatsMetrics.all

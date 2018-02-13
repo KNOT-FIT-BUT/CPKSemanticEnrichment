@@ -9,6 +9,10 @@ CEDAR=false
 DARTS=false
 EXT=".ct"
 
+# saved values
+LAUNCHED=$0
+KB_WORKDIR=$PWD
+
 #=====================================================================
 # nastavovani parametru prikazove radky
 
@@ -22,9 +26,6 @@ usage()
     echo "\t-k --knowledge-base=$KB"
     echo ""
 }
-
-LAUNCHED=$0
-KB_WORKDIR=$PWD
 
 while [ "$1" != "" ]; do
     PARAM=`echo $1 | awk -F= '{print $1}'`
