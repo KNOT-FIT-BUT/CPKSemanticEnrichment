@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
+
 class NatToKB():
 
     def __init__(self):
-
-        with open('narodnosti.txt') as f:
+        with open(os.path.dirname(__file__) + '/narodnosti.txt') as f:
             self.nationalities = f.read().splitlines()
 
     def get_nationalities(self):
