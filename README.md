@@ -1,5 +1,10 @@
 # CPKSemanticEnrichment
 
+# Příprava nástrojů
+Před započetím veškeré práce je potřeba mít zkompilované nástroje, které jsou potřeba v dalších krocích. V hlavním adresáři je třeba spustit příkaz: 
+
+`make`
+
 # KnowledgeBase
 
 Pre svoju činnosť nástroj vyžaduje českú KnowledgeBase. KBje uložená vo formáte TSV, pričom na každom riadku sú uložené informácie o jednej entite. Bližšie informácie o tvorbe KB a význame jednotlivých stĺpcov sú na wiki stránke:
@@ -26,7 +31,7 @@ Výsledkom skriptu je súbor KBstatsMetrics.all. Popis je zhodný s:
 
 # Tvorba slovníkov
 
-Nástroj ner.py ke své činnosti využívá nástroje figa, který pomocí několika slovníků dokáže v textu rozpoznávat entity. Popis nástroje figa i slovníků je možné najít na stránce projektu . V této kapitole je popsána pouze jejich tvorba.
+Nástroj ner_cz.py ke své činnosti využívá nástroje figa, který pomocí několika slovníků dokáže v textu rozpoznávat entity. Popis nástroje figa i slovníků je možné najít na stránce projektu . V této kapitole je popsána pouze jejich tvorba.
 
 Tvorba slovníků pro NER i pro autocomplete je prováděna pomocí skriptů create_cedar.sh a create_cedar_autocomplete.sh. Tyto skripty pracují se souborem KBstatsMetrics.all, z něhož získají seznam jmen, který se následně předloží nástrojem figav1.0, který dané automaty vytvoří.
 
@@ -55,16 +60,16 @@ figa/make_automat/create_cedar.sh
 
 Pre tvorbu slovníkov sa používaju viaceré skripty zo zložky `figa/make_automat` upravené pre tvorbu slovníkov z českej KB. V zložke `figa/make_automat/czechnames` sú navyše uložené skripty pre generovanie alternatívnych mien entít. Bližšie je popísaný na wiki stránke: `https://knot.fit.vutbr.cz/wiki/index.php/Entity_kb_czech_names`. V prípade novšej verzie je potrebné nahradiť aktuálnu verziu v zložke `czechnames`.
 
-# Nástroj ner.py
+# Nástroj ner_cz.py
 
-Nástroj pre rozpoznávánie a disambiguáciue entít je implementovný v skripte ner.py. Pre jeho činnosť je najprv potrebné pripraviť KB a automat z predchádzajúcich krokov. Skript ner.py využívá k svojej činnosti KB, která je nahraná ve zdielanej pamäti pomocou SharedKB. Bližší popis tohto programu je na wiki stránkach: 
+Nástroj pre rozpoznávánie a disambiguáciue entít je implementovný v skripte ner_cz.py. Pre jeho činnosť je najprv potrebné pripraviť KB a automat z predchádzajúcich krokov. Skript ner_cz.py využívá k svojej činnosti KB, která je nahraná ve zdielanej pamäti pomocou SharedKB. Bližší popis tohto programu je na wiki stránkach: 
 
 `https://knot.fit.vutbr.cz/wiki/index.php/Decipher_ner#Program_a_knihovny_pro_KB_ve_sd.C3.ADlen.C3.A9_pam.C4.9Bti_.28xdolez52.29`
 
-Nástroj pracuje s knowledge base s pridanými stĺpcami obsahujúcmi štatistické dáta z Wikipedie a predpočítaným skóre pre disambiguáciu. Vyhľadávanie entít v texte a ich disambiguáciu potom umožňuje skript `ner.py`:
+Nástroj pracuje s knowledge base s pridanými stĺpcami obsahujúcmi štatistické dáta z Wikipedie a predpočítaným skóre pre disambiguáciu. Vyhľadávanie entít v texte a ich disambiguáciu potom umožňuje skript `ner_cz.py`:
 
 ```
- použití: ner.py [-h] [-a | -s] [-d] [-f FILE]
+ použití: ner_cz.py [-h] [-a | -s] [-d] [-f FILE]
  
  Nepovinné argumenty:
    -h, --help            vypíše nápovědu a skončí
