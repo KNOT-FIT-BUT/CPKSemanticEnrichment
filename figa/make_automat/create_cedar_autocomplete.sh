@@ -86,7 +86,7 @@ KB="${KB_WORKDIR}/${KB}"
 
 #======================================================================
 # vytvorenie zoznamu klucov entit v KB a vyhodenie fragmentov zo zoznamu
-python KB2namelist.py -a < "$KB" | tr -s ' ' | grep -v -e "[^;]N" > intext_auto
+python3 KB2namelist.py -a < "$KB" | tr -s ' ' | grep -v -e "[^;]N" > intext_auto
 cat intext_auto | grep "^person:" | sed 's/^person:\t//' > p_intext
 cat intext_auto | grep "^artist:" | sed 's/^artist:\t//' > a_intext
 cat intext_auto | grep "^location:" | sed 's/^location:\t//' > l_intext

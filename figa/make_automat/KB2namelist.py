@@ -27,12 +27,12 @@ import os
 import unicodedata
 import re
 import sys
+from importlib import reload
 from natToKB import NatToKB
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 import metrics_knowledge_base
 
 reload(sys)
-sys.setdefaultencoding("utf-8")
 
 # defining commandline arguments
 parser = argparse.ArgumentParser()
@@ -71,8 +71,8 @@ def generate_name_alternatives(cznames_file):
 def remove_accent(input_str):
 	""" Removes accent from the string, e.g. "José Francisco" -> "Jose Francisco". """
 
-        nkfd_form = unicodedata.normalize('NFKD', unicode(input_str))
-        return u"".join([c for c in nkfd_form if not unicodedata.combining(c)])
+	nkfd_form = unicodedata.normalize('NFKD', str(input_str))
+	return u"".join([c for c in nkfd_form if not unicodedata.combining(c)])
 
 def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 	"""
@@ -121,7 +121,7 @@ def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 				return
 
 		# filtering out all names with length smaller than 2 and greater than 80 characters
-		if len(_key.decode("utf-8")) < 2 or len(_key.decode("utf-8")) > 80:
+		if len(_key) < 2 or len(_key) > 80:
 			return
 
 		# filtering out names ending by ., characters
@@ -400,9 +400,9 @@ def process_mythology(_fields, _line_num):
 	aliases = _fields[headKB['mythology']['ALTERNATIVE NAME']].split(KB_MULTIVALUE_DELIM)
 	aliases.append(_fields[headKB['mythology']['NAME']])
 	for t in aliases:
-                length = t.count(" ") + 1
-                if length >= 2 or t == _fields[headKB['mythology']['NAME']]:
-                        add_to_dictionary(t, _line_num, "mythology", _fields)
+		length = t.count(" ") + 1
+		if length >= 2 or t == _fields[headKB['mythology']['NAME']]:
+			add_to_dictionary(t, _line_num, "mythology", _fields)
 
 def process_family(_fields, _line_num):
 	""" Processes a line with entity of family type. """
@@ -419,7 +419,7 @@ def process_group(_fields, _line_num):
 	aliases.append(_fields[headKB['group']['NAME']])
 	for t in aliases:
 		add_to_dictionary(t, _line_num, "group", _fields)
-
+  
 def process_uri(_fields, _line_num):
 	""" Processes all URIs for a given entry. """
 
@@ -517,4 +517,4 @@ if __name__ == "__main__":
 
 	# printing the output
 	for item in dictionary.items():
-		print item[0] + "\t" + ";".join(item[1])
+		print(item[0] + "\t" + ";".join(item[1]))

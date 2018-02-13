@@ -114,11 +114,11 @@ fi
 # vytvoreni seznamu klicu entit v KB
 
 if $LOWERCASE ; then
-  python KB2namelist.py -l < "$KB" | tr -s ' ' > intext
+  python3 KB2namelist.py -l < "$KB" | tr -s ' ' > intext
 elif $URI ; then
-  python KB2namelist.py -u < "$KB" > intext
+  python3 KB2namelist.py -u < "$KB" > intext
 else
-  python KB2namelist.py < "$KB" | tr -s ' ' > intext
+  python3 KB2namelist.py < "$KB" | tr -s ' ' > intext
 fi
 
 #=====================================================================
