@@ -248,7 +248,6 @@ class KnowledgeBase:
 				self.metrics[ent_type]['wiki_hits'].append(int(self.get_wiki_value(line_num, 'hits')))
 				self.metrics[ent_type]['wiki_ps'].append(int(self.get_wiki_value(line_num, 'ps')))
 
-		sys.stderr.write("sadsadsad")
 		# sorting statistics
 		for i in self.metrics:
 			for j in self.metrics[i]:
