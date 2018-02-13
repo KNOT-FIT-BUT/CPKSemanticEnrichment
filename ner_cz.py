@@ -10,7 +10,7 @@
 import sys
 import re
 import argparse
-import natToKB
+import figa.make_automat.natToKB as natToKB
 import figa.sources.marker as figa
 import ner_knowledge_base
 import os
