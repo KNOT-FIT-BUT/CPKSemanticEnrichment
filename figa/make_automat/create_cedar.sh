@@ -99,9 +99,9 @@ KB="${KB_WORKDIR}/${KB}"
 
 
 #=====================================================================
-CURENT_VERSION=`cat ../../VERSION`
-F_PERSONS_WITH_GENDERS="persons_with_genders_${CURENT_VERSION}"
-F_CZECHNAMES="czechnames.out"
+CURRENT_VERSION=`cat ../../VERSION`
+F_PERSONS_WITH_GENDERS="persons_with_genders_${CURRENT_VERSION}"
+F_CZECHNAMES="czechnames_${CURRENT_VERSION}.out"
 # Skip generating some files if exist, because they are very time consumed
 if ! test -f "${F_PERSONS_WITH_GENDERS}"; then
   python get_persons_with_genders.py -p "$KB" > "${F_PERSONS_WITH_GENDERS}"

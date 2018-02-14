@@ -467,7 +467,11 @@ if __name__ == "__main__":
 		with open("nationalities.txt") as nationality_file:
 			nationality_list = nationality_file.read().splitlines()
 
-		alternatives = generate_name_alternatives('czechnames.out')
+		# load version number (string) of KB
+		with open("../../VERSION") as kb_version_file:
+			kb_version = kb_version_file.read().strip()
+
+		alternatives = generate_name_alternatives('czechnames_' + kb_version + '.out')
 
 		# processing the KB
 		line_num = 1
