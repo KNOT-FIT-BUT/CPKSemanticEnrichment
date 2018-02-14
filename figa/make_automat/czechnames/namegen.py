@@ -271,7 +271,7 @@ def get_gender(jmeno):
 			if not gender:
 				gender = g
 			elif gender != g:
-				sys.stderr.write("Warning, inconsistent gender (" + jmeno[-1] + ") for name: " + ' '.join(jmeno[:-1]) + "\n")
+				sys.stderr.write("Warning, inconsistent gender for name: " + ' '.join(jmeno) + "\n")
 		elif word[-3:] == "ová":
 			return "F"
 	if not gender:
