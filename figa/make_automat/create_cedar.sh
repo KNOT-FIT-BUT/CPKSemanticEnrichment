@@ -105,9 +105,9 @@ F_CZECHNAMES="czechnames_${CURRENT_VERSION}.out"
 # Skip generating some files if exist, because they are very time consumed
 if ! test -f "${F_PERSONS_WITH_GENDERS}"; then
   python get_persons_with_genders.py -p "$KB" > "${F_PERSONS_WITH_GENDERS}"
-  if ! test -f "${F_CZECHNAMES}"; then
-    python3 czechnames/namegen.py -o "${F_CZECHNAMES}" "${F_PERSONS_WITH_GENDERS}"
-  fi
+fi
+if ! test -f "${F_CZECHNAMES}"; then
+  python3 czechnames/namegen.py -o "${F_CZECHNAMES}" "${F_PERSONS_WITH_GENDERS}"
 fi
 
 
