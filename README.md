@@ -1,72 +1,20 @@
 # CPKSemanticEnrichment
 
-# Příprava nástrojů
-Před započetím veškeré práce je potřeba mít zkompilované nástroje, které jsou potřeba v dalších krocích. V hlavním adresáři je třeba spustit příkaz: 
+## KnowledgeBase
 
-`make`
+Nástroj pro svojí činnost vyžaduje českou KnowledgeBase (dále jako KB). KB je uložená ve formátu TSV (tab-separated value), kdy na každém jednom řádku jsou uložené informace o jedné entitě.
 
-# KnowledgeBase
+## Příprava slovníků, nástrojů, ...
+Celý proces přípravy je zjednodušen tak, že stačí spustit jediný skript, který zařídí vše potřebné:
+`start.sh`
 
-Pre svoju činnosť nástroj vyžaduje českú KnowledgeBase. KBje uložená vo formáte TSV, pričom na každom riadku sú uložené informácie o jednej entite. Bližšie informácie o tvorbe KB a význame jednotlivých stĺpcov sú na wiki stránke:
+Tento skript zkompiluje potřebné nástroje a zároveň z KB vytvoří slovníky ([popis tvorby slovníků](https://github.com/KNOT-FIT-BUT/CPKSemanticEnrichment/tree/master/figa/make_automat#tvorba-slovn%C3%ADkov))
 
-`https://knot.fit.vutbr.cz/wiki/index.php/Entity_kb_czech3`
+## Nástroj ner_cz.py
 
-Aktuálna verzia českej KB sa nachádza v zložke:
+Nástroj na rozpoznávání a disambiguaci (anotaci) entit je implementovaný ve skriptu ner_cz.py (pro jeho činnost je potřeba provést kroky uvedené v předchozí kapitole). Skript ner_cz.py využívá ke svojí činnosti KB, která je nahraná ve sdílené paměti pomocí nástrojů z adresáře SharedKB (není třeba nic dalšího spouštět, vše je zahrnuto v předchozím skriptu `start.sh`).
 
-` /mnt/minerva1/nlp/projects/entity_kb_czech3/kb`
-
-## Príprava KB
-
-KB je najskor potrebné nakopírovať do zložky pomocou príkazu:
-
-`cp /mnt/minerva1/nlp/projects/entity_kb_czech3/kb/KB_cs.all .`
-
-Po presune slúži pre prípravu KB skript `prepare_data.sh`. Pred použitím je potrebné zabezpečiť aby sa v zložke nachádzali štatistiky získané z wikipedie. Tie sú aktuálne uložené v súbore `wiki_stats`. V prípade novšej verzie je potrebné tieto štatistiky nakopírovať pomocou príkazu:
-
-`cp cesta_k_statistikam wiki_stats`
-
-Výsledkom skriptu je súbor KBstatsMetrics.all. Popis je zhodný s:
-
-`https://knot.fit.vutbr.cz/wiki/index.php/Decipher_ner#Tvorba_KBstatsMetrics.all`
-
-# Tvorba slovníkov
-
-Nástroj ner_cz.py ke své činnosti využívá nástroje figa, který pomocí několika slovníků dokáže v textu rozpoznávat entity. Popis nástroje figa i slovníků je možné najít na stránce projektu . V této kapitole je popsána pouze jejich tvorba.
-
-Tvorba slovníků pro NER i pro autocomplete je prováděna pomocí skriptů create_cedar.sh a create_cedar_autocomplete.sh. Tyto skripty pracují se souborem KBstatsMetrics.all, z něhož získají seznam jmen, který se následně předloží nástrojem figav1.0, který dané automaty vytvoří.
-
-Tieto skripty sa nachádzajú v zložke:
-`figa/make_automat`
-
-Použitie je popísané tu:
-
-```
-figa/make_automat/create_cedar.sh
- 
- použití: create_cedar.sh [-h] [-l|-u] [-c|-d] --knowledge-base=KBstatsMetrics.all
- 
- povinné argumenty:
- 
-   -k KB, --knowledge-base=KB  cesta ke KBstatsMetrics.all
- 
- nepovinné argumenty:
- 
-   -h, --help                  vypíše nápovědu a skončí
-   -l, --lowercase             všechna jména budou převedena na malá písmena
-   -u, --uri                   vygeneruje seznam URI
-   -c, --cedar (default)       vygeneruje slovníky CEDAR (přípona .ct)
-   -d, --darts                 vygeneruje slovníky DARTS (přípona .dct)
-```
-
-Pre tvorbu slovníkov sa používaju viaceré skripty zo zložky `figa/make_automat` upravené pre tvorbu slovníkov z českej KB. V zložke `figa/make_automat/czechnames` sú navyše uložené skripty pre generovanie alternatívnych mien entít. Bližšie je popísaný na wiki stránke: `https://knot.fit.vutbr.cz/wiki/index.php/Entity_kb_czech_names`. V prípade novšej verzie je potrebné nahradiť aktuálnu verziu v zložke `czechnames`.
-
-# Nástroj ner_cz.py
-
-Nástroj pre rozpoznávánie a disambiguáciue entít je implementovný v skripte ner_cz.py. Pre jeho činnosť je najprv potrebné pripraviť KB a automat z predchádzajúcich krokov. Skript ner_cz.py využívá k svojej činnosti KB, která je nahraná ve zdielanej pamäti pomocou SharedKB. Bližší popis tohto programu je na wiki stránkach: 
-
-`https://knot.fit.vutbr.cz/wiki/index.php/Decipher_ner#Program_a_knihovny_pro_KB_ve_sd.C3.ADlen.C3.A9_pam.C4.9Bti_.28xdolez52.29`
-
-Nástroj pracuje s knowledge base s pridanými stĺpcami obsahujúcmi štatistické dáta z Wikipedie a predpočítaným skóre pre disambiguáciu. Vyhľadávanie entít v texte a ich disambiguáciu potom umožňuje skript `ner_cz.py`:
+Nástroj pracuje s KB s přidanými sloupci, které obsahují statistická data z Wikipedie a předpočítané skóre pro disambiguaci. 
 
 ```
  použití: ner_cz.py [-h] [-a | -s] [-d] [-f FILE]
@@ -83,28 +31,26 @@ Nástroj pracuje s knowledge base s pridanými stĺpcami obsahujúcmi štatistic
 Je také možné vstup načítat ze standardního vstupu (možnost využití přesměrování).
 ```
 
-# Výstup
+### Výstup
 
-Na štandardný výstup nástroj vypisuje zoznam nájdených entít v poradí, v akom sa vyskytujú vo vstupnom texte. Každej entite patrí jeden riadok, a stĺpce sú oddelené tabulátormi. Riadky výstupu majú formát:
+Na standardní výstup nástroj vypisuje seznam nalezených entit v pořadí, v jakém se vyskytují ve vstupním textu. Každé jedné entitě patří jeden řádek; sloupce jsou odděleny znakem tabulátor. Řádky vstupu mají formát:
 
 `BEGIN_OFFSET    END_OFFSET      TYPE    TEXT    OTHER`
 
-BEGIN_OFFSET a END_OFFSET vyjadrujú pozíciu začiatku a konca entity v texte.
+`BEGIN_OFFSET` a `END_OFFSET` vyjadřují pozici začátku a konce entity v textu.
 
-TYPE označuje typ entity: kb pre položku knowledge base, date a interval pre datum a interval, coref pre koreferenciu zámenom alebo časťou mena osoby.
+`TYPE` označuje typ entity: `kb` pro položku KB, `date` a `interval` pro datum a interval, `coref` pre koreferenci zájménem nebo částí jména osoby.
 
-TEXT obsahuje textovú podobu entity tak, ako sa vyskytla vo vstupnom texte.
+`TEXT` obsahuje textovou podobu entity tak, jak se vyskytla ve vstupním textu.
 
-OTHER pre typy kb a coref má podobu zoznamu zodpovedajúcich čísel riadku v knowledge base oddelených znakom ";". Ak je zapnutá disambiguácia, zvolený je len jeden riadok zodpovedajúci najpravdepodobnejšiemu významu. Při použití skriptu s parametrem -s se zobrazí dvojice číslo řádku a ohodnocení entity, dvojice jsou od sebe odděleny středníkem. Pre typy date a interval obsahuje údaj v normalizovanom ISO formáte.
+`OTHER` pro typy `kb` a `coref` má podobu seznamu odpovídajících čísel řádků v KB oddělených znakem ";". Pokud je zapnutá disambiguace, zvolený je pouze jeden řádek odpovídající nejpravděpodobnějšímu významu. Při použití skriptu s parametrem `-s` se zobrazí dvojice číslo řádku a ohodnocení entity, dvojice jsou od sebe odděleny středníkem. Pro typy `date` a `interval` obsahuje údaj v normalizovaném ISO formátu.
 
-# Popis činnosti
+### Popis činnosti
 
-Nástroj funguje podobne ako verzia pre anglickú verziu popísaný tu: `https://knot.fit.vutbr.cz/wiki/index.php/Decipher_ner#Jak_funguje_ner.py.3F_.28xmagdo00.29`
+Nástroj funguje podobně jako anglická verze, kontextová disabiguace je ale o něco rozšířená. V prvním kole se pró jednotlivé odstavce ukládají informace o rozpoznaných entitách podle jejich typů. V druhém kole se tyto informace využívají pro lepší určení konkrétní entity.
 
-Kontextová disabiguácia je ale o niečo rozšírená. V prvom kole sa pre jednotlivé odstavce ukladajú informácie o rozpoznaných entitách podľa ich typov. V druhom kole sa tieto informácie využívajú pre lepšie určenie konkrétnej entity.
+U osob se pro výpočet skóre využívají informace o předešlých výskytech dané osoby v odstavci. Kromě toho se pracuje i s výskytem lokací v daném odstavci, kde se sleduje výskyt lokací, které jsou spojené s danou osobou, tedy místem její narození apod. Využívají se i datumy spojené s touto osobou a jejich výskyt v odstavci a taktéž zaměstnání dané osoby apod.
 
-U osob sa pre výpočet skóre potom využívajú informácie o predošlich výskytoch danej osoby v odstavci. Okrem toho sa pracuje aj s výskytom lokácii v danom odstavci, kde sa sleduje výskyt lokácii ktoré sú spojené s danou osobou, teda miestom jej narodenia apod. Vzužívaju sa aj dátumy spojene s touto osobou a ich výskyt v odstavci a taktiež zamestanie osoby apod.
+U ostatních entit je postup podobný. Sledují se informace z odstavce, které jsou s danou entitou spojené a pomáhají tak s větší jistotou vybrat správnou entitu.
 
-U ostatných entít je postúp podobný. Sledujú sa informácie z odstavca, ktoré sú s danou entitou spojené a pomáhaju tak s vačsiou určitosťou vybrať správnu entitu.
-
-Nástroj taktiež ropoznáva menné koreferencie, koreferencie zámen a dátumy v texte.
+Nástroj taktéž ropoznává jmenné koreference, koreference zájmen a datumy v textu.
