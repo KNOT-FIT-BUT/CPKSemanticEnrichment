@@ -1,5 +1,24 @@
 # CPKSemanticEnrichment
 
+## Závislosti
+Pro správnou funkčnost je nutné doinstalovat následující závislosti:
+* numpy
+* python_dateutil
+* sources
+* pattern
+
+Pro instalaci je možné použít nástroj pip (pip3). Například takto:
+
+    pip install numpy
+
+Dále je nutné mít nainstalovaný swig (http://www.swig.org). Pokud máte některou z linuxových distribucí je možné, že jej lze nainstalovat pomocí vašeho package manageru:
+
+    sudo apt install swig
+
+nebo
+
+    sudo yum install swig
+
 ## KnowledgeBase
 
 Nástroj pro svojí činnost vyžaduje českou KnowledgeBase (dále jako KB). KB je uložená ve formátu TSV (tab-separated value), kdy na každém jednom řádku jsou uložené informace o jedné entitě.
@@ -14,11 +33,11 @@ Tento skript zkompiluje potřebné nástroje a zároveň z KB vytvoří slovník
 
 Nástroj na rozpoznávání a disambiguaci (anotaci) entit je implementovaný ve skriptu ner_cz.py (pro jeho činnost je potřeba provést kroky uvedené v předchozí kapitole). Skript ner_cz.py využívá ke svojí činnosti KB, která je nahraná ve sdílené paměti pomocí nástrojů z adresáře SharedKB (není třeba nic dalšího spouštět, vše je zahrnuto v předchozím skriptu `./start.sh`).
 
-Nástroj pracuje s KB s přidanými sloupci, které obsahují statistická data z Wikipedie a předpočítané skóre pro disambiguaci. 
+Nástroj pracuje s KB s přidanými sloupci, které obsahují statistická data z Wikipedie a předpočítané skóre pro disambiguaci.
 
 ```
  použití: ner_cz.py [-h] [-a | -s] [-d] [-f FILE]
- 
+
  Nepovinné argumenty:
    -h, --help            vypíše nápovědu a skončí
    -a, --all             Vypíše všechny entity ze vstupu bez rozpoznání.
@@ -26,7 +45,7 @@ Nástroj pracuje s KB s přidanými sloupci, které obsahují statistická data 
    -d, --daemon-mode     "mód Daemon" (viz níže)
    -f FILE, --file FILE  Použije zadaný soubor jako vstup.
    -r, --remove-accent   Odstraní diakritiku ze vstupu.
-   -l, --lowercase       Převod vstupu na malá písmena a použití 
+   -l, --lowercase       Převod vstupu na malá písmena a použití
                          zvláštního automatu pouze s malými písmeny.
 Je také možné vstup načítat ze standardního vstupu (možnost využití přesměrování).
 ```

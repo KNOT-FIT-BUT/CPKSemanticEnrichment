@@ -4,12 +4,11 @@ import argparse
 import fileinput
 import re
 import os
-# path to gen_wordform
-sys.path.insert(0, '/mnt/minerva1/nlp/projects/ma/data/morph/scripts/')
 import gen_wordform
 
-paradigms = "/mnt/minerva1/nlp/projects/ma/data/morph/czech.paradigms"
-lpn =          "/mnt/minerva1/nlp/projects/ma/data/morph/czech_vc_prijmeni_navic.lpn"
+
+paradigms = os.path.dirname(os.path.abspath(__file__))+"/czech.paradigms"
+lpn = os.path.dirname(os.path.abspath(__file__))+"/czech_vc_prijmeni_navic.lpn"
 
 output_file = sys.stdout
 nozk = False
