@@ -47,6 +47,12 @@ done
 # zmena spousteci cesty na tu, ve ktere se nachazi start.sh
 cd `dirname "${LAUNCHED}"`
 
+wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/KB_cs.all -O KB_cs.all
+wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/HEAD-KB -O HEAD-KB
+wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/wiki_stats -O wiki_stats
+wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/czech_vc_prijmeni_navic.lpn -O ./figa/make_automat/czechnames/czech_vc_prijmeni_navic.lpn
+wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/czech.paradigms -O ./figa/make_automat/czechnames/czech.paradigms
+
 if $LOG; then
 	rm -f start.sh.fifo.stdout start.sh.fifo.stderr start.sh.fifo.stdmix
 	mkfifo start.sh.fifo.stdout start.sh.fifo.stderr start.sh.fifo.stdmix
