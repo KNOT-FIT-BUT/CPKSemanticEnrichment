@@ -20,7 +20,7 @@ limitations under the License.
 import sys
 import metrics_knowledge_base
 
-with open("wiki_stats") as wiki_stats:
+with open("./data/in/wiki_stats_cs.tsv") as wiki_stats:
     stats = dict()
     for line in wiki_stats:
         items = line[:-1].split("\t")
@@ -30,7 +30,7 @@ with open("wiki_stats") as wiki_stats:
 found = 0
 not_found = 0
 
-with open("KB_cs.all") as kb:
+with open("./data/in/KBbasic_cs.tsv") as kb:
     for line in kb:
         split_line = line[:-1].split("\t")
         ent_type = split_line[0]

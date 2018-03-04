@@ -37,7 +37,7 @@ DEBUG_EN = False
 
 # getting the absolute path to the directory with this script
 script_dir = os.path.dirname(os.path.abspath(__file__))
-PATH_HEAD_KB = os.path.abspath(os.path.join(script_dir, "HEAD-KB"))
+PATH_HEAD_KB = os.path.abspath(os.path.join(script_dir, "data/in/KB-HEAD_cs.tsv"))
 KB_MULTIVALUE_DELIM = "|"
 
 # FUNCTIONS AND CLASSES
@@ -54,7 +54,7 @@ def print_dbg(text=""):
 	print(head + ":\n'''\n" + text + "\n'''")
 
 def getDictHeadKB():
-	""" Returns a dictionary with the structure of KB from HEAD-KB. """
+	""" Returns a dictionary with the structure of KB from KB-HEAD_cs.tsv. """
 
 	lines = []
 	with open(PATH_HEAD_KB) as head_kb_file:
