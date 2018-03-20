@@ -47,6 +47,7 @@ done
 # zmena spousteci cesty na tu, ve ktere se nachazi start.sh
 cd `dirname "${LAUNCHED}"`
 
+wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/VERSION -O VERSION
 wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/KB_cs.all -O KB_cs.all
 wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/HEAD-KB -O HEAD-KB
 wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/wiki_stats -O wiki_stats
