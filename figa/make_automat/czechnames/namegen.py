@@ -6,9 +6,9 @@ import re
 import os
 import gen_wordform
 
-
-paradigms = os.path.dirname(os.path.abspath(__file__))+"/czech.paradigms"
-lpn = os.path.dirname(os.path.abspath(__file__))+"/czech_vc_prijmeni_navic.lpn"
+morphdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/morph/"
+paradigms = morphdir + "czech.paradigms"
+lpn = morphdir + "czech_vc_prijmeni_navic.lpn"
 
 output_file = sys.stdout
 nozk = False
@@ -316,7 +316,7 @@ def print_names(names):
 		output_file.write(str(n) + "\n")
 
 def make_lpn():
-	os.system("/mnt/minerva1/nlp/projects/ma/data/morph/scripts/lntrf2lpn.py -l /mnt/minerva1/nlp/projects/ma/data/morph/prijmeni_navic.lpn -g guesser -e explainer namegen.unknown.lntrf > namegen.unknown.lpn 2> namegen.unknown.guess_err")
+	os.system(morphdir + "lntrf2lpn.py -l " + morphdir + "prijmeni_navic.lpn -g guesser -e explainer namegen.unknown.lntrf > namegen.unknown.lpn 2> namegen.unknown.guess_err")
 	
 	
 	
