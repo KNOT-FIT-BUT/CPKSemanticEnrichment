@@ -256,12 +256,12 @@ def add(_key, _value, _type):
 	dictionary[_key].add(_value)
 
 	# removing accent
-	_accent = remove_accent(_key)
+#	_accent = remove_accent(_key)
 
 	# adding the name without accent into the dictionary
-	if _accent not in dictionary:
-		dictionary[_accent] = set()
-	dictionary[_accent].add(_value)
+#	if _accent not in dictionary:
+#		dictionary[_accent] = set()
+#	dictionary[_accent].add(_value)
 
 SURNAME_MATCH = re.compile(r"(((?<=^)|(?<=[ ]))(da |von )?(([A-Z][a-z]*-)?([A-Z][a-z]+))$)")
 UNWANTED_MATCH = re.compile(r"(Princ|Svatý|,|z|[0-9])")
