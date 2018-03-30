@@ -283,12 +283,12 @@ def process_person(_fields, _line_num, alt_names):
 		if length >= 2 or confidence >= CONFIDENCE_THRESHOLD:
 			add_to_dictionary(t, _line_num, "person", _fields, alt_names)
 
-	if confidence >= CONFIDENCE_THRESHOLD:
-		surname_match = SURNAME_MATCH.search(name)
-		unwanted_match = UNWANTED_MATCH.search(name)
-		if surname_match and not unwanted_match:
-			surname = surname_match.group(0)
-			add_to_dictionary(surname, _line_num, "person", _fields, alt_names)
+#	if confidence >= CONFIDENCE_THRESHOLD:
+#		surname_match = SURNAME_MATCH.search(name)
+#		unwanted_match = UNWANTED_MATCH.search(name)
+#		if surname_match and not unwanted_match:
+#			surname = surname_match.group(0)
+#			add_to_dictionary(surname, _line_num, "person", _fields, alt_names)
 
 def process_artist(_fields, _line_num, alt_names):
 	""" Processes a line with entity of artist type. """
@@ -308,12 +308,12 @@ def process_artist(_fields, _line_num, alt_names):
 		if length >= 2 or confidence >= CONFIDENCE_THRESHOLD:
 			add_to_dictionary(t, _line_num, "preson:artist", _fields, alt_names)
 
-	if confidence >= CONFIDENCE_THRESHOLD:
-		surname_match = SURNAME_MATCH.search(name)
-		unwanted_match = UNWANTED_MATCH.search(name)
-		if surname_match and not unwanted_match:
-			surname = surname_match.group(0)
-			add_to_dictionary(surname, _line_num, "preson:artist", _fields, alt_names)
+#	if confidence >= CONFIDENCE_THRESHOLD:
+#		surname_match = SURNAME_MATCH.search(name)
+#		unwanted_match = UNWANTED_MATCH.search(name)
+#		if surname_match and not unwanted_match:
+#			surname = surname_match.group(0)
+#			add_to_dictionary(surname, _line_num, "preson:artist", _fields, alt_names)
 
 def process_other(_fields, _line_num, alt_names):
 	""" Processes a line with entity of location type. """
