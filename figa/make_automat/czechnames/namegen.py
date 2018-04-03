@@ -320,7 +320,7 @@ def generate(names):
 def print_names(names):
 	for n in names:
 		# if valid gender and for all name_part, the name_variants are not empty
-		if (n.gender in ['F', 'M'] and reduce(lambda res, name_part: res and reduce(lambda x, y: x and y, map(bool, name_part[3])), n.parts)):
+		if (n.gender in ['F', 'M'] and reduce(lambda a, b: a and b, map(lambda name_part: reduce(lambda x, y: x and y, map(bool, name_part[3])), n.parts))):
 			output_file.write(str(n) + "\n")
 		else:
 			output_file_invalid.write(str(n) + "\n")
