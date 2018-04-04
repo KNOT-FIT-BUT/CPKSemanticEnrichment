@@ -181,17 +181,17 @@ class KnowledgeBaseCZ(object):
 		#	for other_role in other_roles:
 		#		if other_role and " " not in other_role:
 		#			roles.add(other_role)
-		if ent_type == "person":
-			professions = self.get_data_for(line, "POVOLANI").split("|")
-			for profession in professions:
-				if profession:
-					roles.add(profession)
-
-		for role in roles:
-			role = role.lower()
-			names.add(role)
-			self.fragments.add(role)
-			self.fragments.add(role.decode('utf8').title())
+#		if ent_type == "person":
+#			professions = self.get_data_for(line, "POVOLANI").split("|")
+#			for profession in professions:
+#				if profession:
+#					roles.add(profession)
+#
+#		for role in roles:
+#			role = role.lower()
+#			names.add(role)
+#			self.fragments.add(role)
+#			self.fragments.add(role.decode('utf8').title())
 
 		for whole_name in whole_names:
 
