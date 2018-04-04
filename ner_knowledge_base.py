@@ -179,7 +179,7 @@ class KnowledgeBaseCZ(object):
 			role = role.lower()
 			names.add(role)
 			self.fragments.add(role)
-			self.fragments.add(role.title())
+			self.fragments.add(role.decode('utf8').title())
 
 		for whole_name in whole_names:
 
