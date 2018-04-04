@@ -14,7 +14,6 @@ headKB = metrics_knowledge_base.getDictHeadKB()
 KB_MULTIVALUE_DELIM = metrics_knowledge_base.KB_MULTIVALUE_DELIM
 
 def generate_name_alternatives(kb_path):
-
     if kb_path:
         name_lines = []
         with open(kb_path) as kb:

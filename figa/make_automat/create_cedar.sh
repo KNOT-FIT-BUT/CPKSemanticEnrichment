@@ -107,9 +107,8 @@ if ! test -f "${F_PERSONS_WITH_GENDERS}"; then
   python get_persons_with_genders.py -p "$KB" > "${F_PERSONS_WITH_GENDERS}"
 fi
 if ! test -f "${F_CZECHNAMES}"; then
-  python3 czechnames/namegen.py -o "${F_CZECHNAMES}" "${F_PERSONS_WITH_GENDERS}"
+  python3 czechnames/namegen.py -o "${F_CZECHNAMES}" -x "${F_CZECHNAMES}.invalid" "${F_PERSONS_WITH_GENDERS}"
 fi
-
 
 #=====================================================================
 # vytvoreni seznamu klicu entit v KB

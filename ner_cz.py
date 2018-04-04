@@ -466,7 +466,7 @@ class Entity(object):
             result += "name"
         else:
             result += "kb"
-        result += "\t" + self.input_string_in_unicode[self.start_offset:self.end_offset] + "\t"
+        result += "\t" + self.input_string_in_unicode[self.start_offset:self.end_offset].replace('\n', ' ').replace('\r', '') + "\t"
         if display_entity_score and self.candidates:
             candidates_str = []
             i = 0

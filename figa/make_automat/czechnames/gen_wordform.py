@@ -3,9 +3,10 @@
 import sys
 import argparse
 import re
+import os
 from collections import defaultdict
 
-MORPHDIR='/mnt/minerva1/nlp/projects/ma/data/morph/'
+MORPHDIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/morph/"
 SPECIAL_PREFIXES = ['nejne','nej','ne']
 
 def parse_args():

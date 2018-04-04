@@ -1,14 +1,17 @@
 import sys
 from collections import defaultdict
+from functools import reduce
 import argparse
 import fileinput
 import re
 import os
 import gen_wordform
 
+morphdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/morph/"
+paradigms = morphdir + "czech.paradigms"
+lpn = morphdir + "czech_vc_prijmeni_navic.lpn"
 
-paradigms = os.path.dirname(os.path.abspath(__file__))+"/czech.paradigms"
-lpn = os.path.dirname(os.path.abspath(__file__))+"/czech_vc_prijmeni_navic.lpn"
+FILE_DEVNULL = os.devnull
 
 output_file = sys.stdout
 nozk = False
@@ -227,6 +230,7 @@ def init(args):
 	global trs4p
 	global pns4l
 	global output_file
+	global output_file_invalid
 	global nozk
 	global paradigms
 	global lpn
@@ -244,6 +248,7 @@ def init(args):
 	try: 
 		if args.output:
 			output_file =  open(args.output, 'w')
+		output_file_invalid = open(args.invalid if args.invalid else FILE_DEVNULL, 'w')
 	except Exception as e:
 		sys.stderr.write(str(e))
 		close_IO()
@@ -282,6 +287,7 @@ def get_gender(jmeno):
 def close_IO():
 		try:
 			output_file.close()
+			output_file_invalid.close()
 		except Exception:
 			pass
 
@@ -313,16 +319,22 @@ def generate(names):
 
 def print_names(names):
 	for n in names:
-		output_file.write(str(n) + "\n")
+		# if valid gender and for all name_part, the name_variants are not empty
+		if (n.gender in ['F', 'M'] and reduce(lambda a, b: a and b, map(lambda name_part: reduce(lambda x, y: x and y, map(bool, name_part[3])), n.parts))):
+			output_file.write(str(n) + "\n")
+		else:
+			output_file_invalid.write(str(n) + "\n")
+			#output_file_invalid.write(n.gender + " (" + " ".join(name_part[0] for name_part in n.parts) + ")\n")
 
 def make_lpn():
-	os.system("/mnt/minerva1/nlp/projects/ma/data/morph/scripts/lntrf2lpn.py -l /mnt/minerva1/nlp/projects/ma/data/morph/prijmeni_navic.lpn -g guesser -e explainer namegen.unknown.lntrf > namegen.unknown.lpn 2> namegen.unknown.guess_err")
+	os.system(morphdir + "lntrf2lpn.py -l " + morphdir + "prijmeni_navic.lpn -g guesser -e explainer namegen.unknown.lntrf > namegen.unknown.lpn 2> namegen.unknown.guess_err")
 	
 	
 	
 def get_args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-o", "--output", help="Vystupni soubor", type=str)
+	parser.add_argument("-x", "--invalid", help="Vystupni soubor pro nevalidni jmena", type=str)
 	parser.add_argument("-p", "--parafile", help="Soubor se vzory", type=str)
 	parser.add_argument("-l", "--lpnfile", help="Soubor obsahující vzory slov", type=str)
 	parser.add_argument("-s","--short",  help="Moznost vypisu bez znacek", action="store_true")
