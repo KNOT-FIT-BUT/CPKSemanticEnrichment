@@ -37,6 +37,7 @@ DEBUG_EN = False
 
 # getting the absolute path to the directory with this script
 script_dir = os.path.dirname(os.path.abspath(__file__))
+
 PATH_HEAD_KB = os.path.abspath(os.path.join(script_dir, "HEAD-KB"))
 KB_MULTIVALUE_DELIM = "|"
 
@@ -48,9 +49,9 @@ def print_dbg(text=""):
 	callerframerecord = inspect.stack()[1]
 	frame = callerframerecord[0]
 	info = inspect.getframeinfo(frame)
-	
+
 	head = "(" + info.filename + ", " + info.function + ", " + str(info.lineno) + ")"
-	
+
 	print(head + ":\n'''\n" + text + "\n'''")
 
 def getDictHeadKB():
@@ -61,7 +62,8 @@ def getDictHeadKB():
 		for line in head_kb_file:
 			if line[:-1] != "":
 				lines.append(line[:-1].split("\t"))
-	
+
+
 	headKB = {} # Slovník TYPE:{COLUMN_NAME:COLUMN}
 	for line_num in range(len(lines)):
 		text = ""
@@ -85,23 +87,24 @@ class KnowledgeBase:
 	headKB = getDictHeadKB()
 	wiki_link_column = {}
 	wiki_stats_column = {}
-	#wiki_link_column = dict([(ent_type, headKB[ent_type]["WIKI_URL"]) for ent_type in headKB.keys()])
 	for ent_type in headKB.keys():
-		if "WIKI_URL" in headKB[ent_type]:
-			wiki_link_column[ent_type] = headKB[ent_type]["WIKI_URL"]
-		if "WIKI BACKLINKS" in headKB[ent_type]:
-			wiki_stats_column[ent_type] = headKB[ent_type]["WIKI BACKLINKS"]
-	#wiki_stats_column = dict([(ent_type, headKB[ent_type]["WIKI BACKLINKS"]) for ent_type in headKB.keys()])
-	
+		if "NAME" in headKB[ent_type]:
+			wiki_link_column[ent_type] = headKB[ent_type]["NAME"]
+		if "WIKIPEDIA BACKLINKS" in headKB[ent_type]:
+			wiki_stats_column[ent_type] = headKB[ent_type]["WIKIPEDIA BACKLINKS"]
+
 	def __init__(self, filename):
 		"""
 		Reads knowledge base from a file using ctypes library
 		kb_loader.so, prepares a dictionary of peoples names
 		for coreference detection.
 		"""
-		
+
+
 		# lists of metrics values in kb for computing percentiles
 		self.metrics = {'person':{'description_length':[], 'columns_number':[], 'wiki_backlinks':[], 'wiki_hits':[], 'wiki_ps':[]},
+                'location:country':{'description_length':[], 'columns_number':[], 'wiki_backlinks':[], 'wiki_hits':[], 'wiki_ps':[]},
+                'person:fictional':{'description_length':[], 'columns_number':[], 'wiki_backlinks':[], 'wiki_hits':[], 'wiki_ps':[]},
 				'organisation':{'description_length':[], 'columns_number':[], 'wiki_backlinks':[], 'wiki_hits':[], 'wiki_ps':[]},
 				'geo':{'description_length':[], 'columns_number':[], 'wiki_backlinks':[], 'wiki_hits':[], 'wiki_ps':[]},
 				'geo:geoplace':{'description_length':[], 'columns_number':[], 'wiki_backlinks':[], 'wiki_hits':[], 'wiki_ps':[]},
@@ -122,6 +125,8 @@ class KnowledgeBase:
 
 		# data structure for indexing percentile scores
 		self.metric_index = {'person':{'description_length':{}, 'columns_number':{}, 'wiki_backlinks':{}, 'wiki_hits':{}, 'wiki_ps':{}},
+                    'person:fictional':{'description_length':{}, 'columns_number':{}, 'wiki_backlinks':{}, 'wiki_hits':{}, 'wiki_ps':{}},
+                    'location:country':{'description_length':{}, 'columns_number':{}, 'wiki_backlinks':{}, 'wiki_hits':{}, 'wiki_ps':{}},
 					'organisation':{'description_length':{}, 'columns_number':{}, 'wiki_backlinks':{}, 'wiki_hits':{}, 'wiki_ps':{}},
 					'geo':{'description_length':{}, 'columns_number':{}, 'wiki_backlinks':{}, 'wiki_hits':{}, 'wiki_ps':{}},
 					'geo:geoplace':{'description_length':{}, 'columns_number':{}, 'wiki_backlinks':{}, 'wiki_hits':{}, 'wiki_ps':{}},
@@ -146,30 +151,32 @@ class KnowledgeBase:
 	def get_ent_type(self, line):
 		""" Returns a type of an entity at the line of the knowledge base. """
 
-		ent_type = self.get_field(line, 0)
+		ent_type = self.get_field(line, 2)
 		return ent_type
-	
+
 	def get_location_code(self, line):
 		return self.get_data_for(line, "FEATURE CODE")[0:3]
 
 	def get_field(self, line, column):
 		""" Returns a column of a line in the knowledge base. """
-
+        #### tuto to skončí pri try - treba zistiť prečo?
 		# KB lines are indexed from one
-		try:
-			return self.lines[int(line) - 1][column]
-		except:
 
+		try:
+			return self.lines[int(line) - 1][column-1]
+		except:
+                        print(self.lines[int(line) -1])
 			sys.stderr.write("line " + str(line) + " column " + str(column) + "\n")
 			exit()
-	
+
 	def get_data_for(self, line, col_name):
 		""" Line numbering from one. """
 
 		# getting the entity type
 		ent_type = self.get_ent_type(line)
+
 		return self.get_field(line, KnowledgeBase.headKB[ent_type][col_name])
-	
+
 	def nonempty_columns(self, line):
 		""" Returns a number of columns at the specified line of the knowledge base which have a non-empty value. """
 
@@ -180,25 +187,24 @@ class KnowledgeBase:
 				result += 1
 
 		return result
-	
+
 	def description_length(self, line):
 		""" Returns a length of a description of a specified line. """
 
 		# getting the entity type
 		ent_type = self.get_ent_type(line)
 		field = "INFO"
-		odstavec = ["person:artist", "person", "event"]
+		odstavec = ["person:artist", "person", "event", "person:fictional"]
 		if ent_type in odstavec:
-			field = "ODSTAVEC"
+			field = "DESCRIPTION"
 		elif ent_type == "organisation":
-			field = "POPIS"
-		
+			field = "DESCRIPTION"
+
 		return len(self.get_data_for(line, field))
-	
+
 	def metric_percentile(self, line, metric):
 		""" Computing a percentile score for a given metric and entity. """
 
-		# getting the entity type
 		ent_type = self.get_ent_type(line)
 
 		value = 0
@@ -210,8 +216,9 @@ class KnowledgeBase:
 			value_str = self.get_wiki_value(line, metric[5:])
 			if value_str:
 				value = int(value_str)
+
 		return self.metric_index[ent_type][metric][value]
-	
+
 	def get_wiki_value(self, line, column_name):
 		"""
 		Return a link to Wikipedia or a statistc value identified
@@ -223,10 +230,9 @@ class KnowledgeBase:
 			return self.get_data_for(line, "WIKI_URL")
 		else:
 			return self.get_data_for(line, column_rename[column_name])
-	
+
 	def insert_metrics(self):
 		""" Computing SCORE WIKI, SCORE METRICS and CONFIDENCE and adding them to the KB. """
-
 		# loading knowledge base
 		self.lines = []
 		self.lines_added = []
@@ -235,7 +241,8 @@ class KnowledgeBase:
 				self.lines.append(line[:-1].split("\t"))
 				self.lines_added.append(line[:-1].split("\t"))
 
-		# computing statistics		
+
+		# computing statistics
 		for line_num in range(1, len(self.lines) + 1):
 			ent_type = self.get_ent_type(line_num)
 			if ent_type == "nationality":
@@ -243,10 +250,14 @@ class KnowledgeBase:
 
 			self.metrics[ent_type]['columns_number'].append(self.nonempty_columns(line_num))
 			self.metrics[ent_type]['description_length'].append(self.description_length(line_num))
+
+
 			if self.get_wiki_value(line_num, 'backlinks'):
 				self.metrics[ent_type]['wiki_backlinks'].append(int(self.get_wiki_value(line_num, 'backlinks')))
 				self.metrics[ent_type]['wiki_hits'].append(int(self.get_wiki_value(line_num, 'hits')))
 				self.metrics[ent_type]['wiki_ps'].append(int(self.get_wiki_value(line_num, 'ps')))
+
+
 
 		# sorting statistics
 		for i in self.metrics:
@@ -267,6 +278,8 @@ class KnowledgeBase:
 						else:
 							self.metric_index[i][j][self.metrics[i][j][k]] = 1.0
 
+
+
 		# computing SCORE WIKI, SCORE METRICS and CONFIDENCE
 		for line_num in range(1, len(self.lines) + 1):
 
@@ -282,19 +295,24 @@ class KnowledgeBase:
 				wiki_ps = self.metric_percentile(line_num, 'wiki_ps')
 				score_wiki = 100 * numpy.average([wiki_backlinks, wiki_hits, wiki_ps], weights=[5, 5, 1])
 			self.lines_added[line_num - 1].append("%.2f" % score_wiki)
-			
+
 			# computing SCORE METRICS
 			description_length = self.metric_percentile(line_num, 'description_length')
 			columns_number = self.metric_percentile(line_num, 'columns_number')
 			score_metrics = 100 * numpy.average([description_length, columns_number])
 			self.lines_added[line_num - 1].append("%.2f" % score_metrics)
 
+
 			# computing CONFIDENCE
 			self.lines_added[line_num - 1].append("%.2f" % numpy.average([score_wiki, score_metrics], weights=[5, 1]))
+                str(self)
 
 	def __str__(self):
 		result = ""
+                #print(self.lines_added)
 		for line in self.lines_added:
+                        #print(line)
 			result += '\t'.join(line) + '\n'
-		return result
+                sys.stdout.write(result)
 
+		return result

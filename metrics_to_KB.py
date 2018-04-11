@@ -21,10 +21,13 @@ import metrics_knowledge_base
 import argparse
 
 parser = argparse.ArgumentParser()
+
 parser.add_argument('-k', '--knowledge-base', help='File containing the knowledge base', required=True)
 
 arguments = parser.parse_args()
+# arguments.knowledge_base is the name of file that is submitted as argument
 
 kb = metrics_knowledge_base.KnowledgeBase(arguments.knowledge_base)
 kb.insert_metrics()
-print kb
+
+#sys.stdout(kb)

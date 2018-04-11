@@ -20,37 +20,42 @@ limitations under the License.
 import sys
 import metrics_knowledge_base
 
+
 with open("wiki_stats") as wiki_stats:
     stats = dict()
     for line in wiki_stats:
         items = line[:-1].split("\t")
-        url = "http://cs.wikipedia.org/wiki/" + items[0]
-        stats[url] = items[1:]
+        name = items[0]
+        stats[name] = items[1:]
 
 found = 0
 not_found = 0
 
-with open("KB_cs.all") as kb:
+
+
+with open("kb_cs") as kb:
     for line in kb:
-        split_line = line[:-1].split("\t")
-        ent_type = split_line[0]
-        
+        split_line = line.split("\t")
+
+        ent_type = split_line[1]
+
         if ent_type in metrics_knowledge_base.KnowledgeBase.wiki_link_column:
             index = metrics_knowledge_base.KnowledgeBase.wiki_link_column[ent_type]
         else:
             sys.stdout.write(line.strip('\n') + "\t\t\t\n")
             continue
 
-        if index >= len(split_line):
+        if index > len(split_line):
             sys.stderr.write("ERROR: There is no column " + str(index + 1) + " in row " + line + ".\n")
+            continue
             exit(99)
 
-        link = split_line[index]
-        
-        if link in stats:
-            sys.stdout.write(line.strip('\n') + '\t' + stats[link][0] + '\t' + stats[link][1] + '\t' + stats[link][2] + '\n')
+        name = split_line[index-1].replace(" ", "_")
+
+        if name in stats:
+            sys.stdout.write(line.strip('\n') + '\t' + stats[name][0] + '\t' + stats[name][1] + '\t' + stats[name][2] + '\n')
             found += 1
         else:
             sys.stdout.write(line.strip('\n') + "\t\t\t\n")
-            if link:
+            if name:
                 not_found += 1
