@@ -83,7 +83,7 @@ elif [ ! -f "$KB" ]; then
   echo "ERROR: Could not found KB on path: ${KB}" >&2
   if ! $KB_GIVEN ; then
     echo "Did you forget to set the parameter \"-k\"? (Default \"${KB}\" was used.)\n" >&2
-    
+
     usage
   fi
   exit
@@ -97,6 +97,8 @@ cd `dirname "${LAUNCHED}"`
 # ale soucasne je treba zmenit cestu ke KB, jinak bychom problem posunuli jinam
 KB="${KB_WORKDIR}/${KB}"
 
+# cesta pro import modulů do Python skriptů
+export PYTHONPATH=../../:$PYTHONPATH
 
 #=====================================================================
 CURRENT_VERSION=`cat ../../VERSION`
@@ -111,7 +113,7 @@ if ! test -f "${F_CZECHNAMES}"; then
 fi
 
 #=====================================================================
-# vytvoreni seznamu klicu entit v KB
+# vytvoreni seznamu klicu entit v KB, pridani fragmentu jmen a prijmeni entit a zajmen
 
 if $LOWERCASE ; then
   python3 KB2namelist.py -l < "$KB" | tr -s ' ' > intext
@@ -119,15 +121,6 @@ elif $URI ; then
   python3 KB2namelist.py -u < "$KB" > intext
 else
   python3 KB2namelist.py < "$KB" | tr -s ' ' > intext
-fi
-
-#=====================================================================
-# pridani fragmentu jmen a prijmeni entit
-
-if ! $URI ; then
-  python get_names.py > names
-  sort -u < names | sed 's/$/\tN/' > fragments
-  cat fragments >> intext
 fi
 
 #=====================================================================

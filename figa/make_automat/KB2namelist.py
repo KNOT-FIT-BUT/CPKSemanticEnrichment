@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -24,9 +24,10 @@ limitations under the License.
 import itertools
 import argparse
 import os
-import unicodedata
 import re
 import sys
+from library.utils import remove_accent
+from library.entities.Persons import Persons
 from importlib import reload
 from natToKB import NatToKB
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -50,7 +51,7 @@ headKB = metrics_knowledge_base.getDictHeadKB()
 # multiple values delimiter
 KB_MULTIVALUE_DELIM = metrics_knowledge_base.KB_MULTIVALUE_DELIM
 
-def generate_name_alternatives(cznames_file):
+def load_name_inflections(cznames_file):
 	result = {}
 
 	with open(cznames_file) as f:
@@ -68,16 +69,10 @@ def generate_name_alternatives(cznames_file):
 					result[name].add(a)
 	return result
 
-def remove_accent(input_str):
-	""" Removes accent from the string, e.g. "José Francisco" -> "Jose Francisco". """
-
-	nkfd_form = unicodedata.normalize('NFKD', str(input_str))
-	return u"".join([c for c in nkfd_form if not unicodedata.combining(c)])
-
 def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 	"""
 	 Adds the name into the dictionary. For each name it adds also an alternative without accent.
-	
+
 	 _key : the name of a given entity
 	 _value : the line number (from the KB) corresponding to a given entity
 	 _type : the type of a given entity
@@ -224,7 +219,7 @@ def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 def add(_key, _value, _type):
 	"""
 	 Adds the name into the dictionary. For each name it adds also an alternative without accent.
-	
+
 	 _key : the name
 	 _value : the line number (from the KB) corresponding to a given entity
 	 _type : the type prefix for a given entity
@@ -419,7 +414,7 @@ def process_group(_fields, _line_num):
 	aliases.append(_fields[headKB['group']['NAME']])
 	for t in aliases:
 		add_to_dictionary(t, _line_num, "group", _fields)
-  
+
 def process_uri(_fields, _line_num):
 	""" Processes all URIs for a given entry. """
 
@@ -471,7 +466,7 @@ if __name__ == "__main__":
 		with open("../../VERSION") as kb_version_file:
 			kb_version = kb_version_file.read().strip()
 
-		alternatives = generate_name_alternatives('czechnames_' + kb_version + '.out')
+		alternatives = load_name_inflections('czechnames_' + kb_version + '.out')
 
 		# processing the KB
 		line_num = 1
@@ -510,6 +505,21 @@ if __name__ == "__main__":
 				process_group(fields, str(line_num))
 			'''
 			line_num += 1
+
+		# Subnames in all inflections with 'N'
+		subnames = set()
+		for base, inflections in alternatives.items():
+			inflections.add(base)
+			# TODO: lowercase | non-accent variant configuration
+			for subname in Persons.get_subnames(inflections):
+				if subname not in dictionary:
+					dictionary[subname] = set()
+					dictionary[subname].add('N')
+
+		# Pronouns with first lower and first upper with 'N'
+		pronouns = ["on", "ho", "mu", "něm", "jím", "ona", "jí", "ní"]
+		pronouns += [pronoun.capitalize() for pronoun in pronouns]
+		dictionary.update(dict.fromkeys(pronouns, 'N'))
 
 	# geting nationalities
 	ntokb = NatToKB()
