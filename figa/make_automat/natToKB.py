@@ -1,43 +1,31 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os
 
 class NatToKB():
 
-    def __init__(self):
-        with open(os.path.dirname(__file__) + '/narodnosti.txt') as f:
-            self.nationalities = f.read().splitlines()
+	def __init__(self):
+		with open(os.path.dirname(__file__) + '/narodnosti.txt') as f:
+			self.nationalities = f.read().splitlines()
 
-    def get_nationalities(self):
+	def get_nationalities(self):
 
-        nationalities = []
+		nationalities = []
 
-        for nat in self.nationalities:
-            nat2 = nat[:-2] + 'ý'
-            nationalities.append(nat)
-            nationalities.append(nat2)
+		for nat in self.nationalities:
+			nat2 = nat[:-1] + 'ý'
+			nationalities.append(nat)
+			nationalities.append(nat2)
 
-            if nat.startswith('Č'):
-                nat = 'č' + nat[2:]
-                nat2 = 'č' + nat2[2:]
-            elif nat.startswith('Á'):
-                nat = 'á' + nat[2:]
-                nat2= 'á' + nat2[2:]
-            elif nat.startswith('Ř'):
-                nat = 'ř' + nat[2:]
-                nat2 = 'ř' + nat2[2:]
-            elif nat.startswith('Š'):
-                nat = 'š' + nat[2:]
-                nat2 = 'š' + nat2[2:]
-            elif nat.startswith('Ž'):
-                nat = 'ž' + nat[2:]
-                nat2 = 'ž' + nat2[2:]
-            else:
-                nat = nat.lower()
-                nat2 = nat2.lower()
+			if nat[0] in ['Á', 'Č', 'Í', 'Ř', 'Š', 'Ž']:
+				nat = nat[0].lower() + nat[1:]
+				nat2 = nat2[0].lower() + nat2[1:]
+			else:
+				nat = nat.lower()
+				nat2 = nat2.lower()
 
-            nationalities.append(nat)
-            nationalities.append(nat2)
+			nationalities.append(nat)
+			nationalities.append(nat2)
 
-        return nationalities
+		return nationalities

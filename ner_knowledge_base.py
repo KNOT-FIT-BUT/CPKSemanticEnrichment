@@ -46,7 +46,7 @@ class KnowledgeBaseCZ(object):
 
 	def start(self):
 		kb_daemon_run = self.check()
-		
+
 		try:
 			if(self.kb_shm_name == None):
 				if(kb_daemon_run):
@@ -68,7 +68,7 @@ class KnowledgeBaseCZ(object):
 					self.kb_daemon = KbDaemon(self.kb_shm_name)
 					self.kb_daemon.start()
 					self.kb_shm.start()
-	
+
 		except:
 			self.end()
 			raise
@@ -96,35 +96,43 @@ class KnowledgeBaseCZ(object):
 		Dictionary asociates parts of person names with corresponding items of knowledge base.
 		'''
 		PATH_NAMEDICT = os.path.join(SCRIPT_DIR, "ner_namedict.pkl")
-		
+		PATH_FRAGMENTS = os.path.join(SCRIPT_DIR, "ner_fragments.pkl")
+
 		#person_alias = self.get_head_col("person", "ALIAS")
 		person_name = self.get_head_col("person", "JMENO")
 		#artist_other = self.get_head_col("artist", "OTHER TERM")
 		#artist_preferred = self.get_head_col("artist", "PREFERRED TERM")
 		#artist_display = self.get_head_col("artist", "DISPLAY TERM")
-		
+
 		self.name_dict = {}
 		self.fragments = set()
-		
+
 		# Proto aby se nemusela znova procházet KB, vytvoří se soubor PATH_NAMEDICT.
 		# Namedict se bude načítat z něj pokud PATH_KB bude starší než PATH_NAMEDICT - tím dojde k urychlení.
-		if (os.access(PATH_NAMEDICT, os.F_OK)) and (os.stat(PATH_KB).st_mtime < os.stat(PATH_NAMEDICT).st_mtime):
-			namedict_file = open(PATH_NAMEDICT, 'rb')
-			self.name_dict = pickle.load(namedict_file)
-			namedict_file.close()
+		if (os.access(PATH_NAMEDICT, os.F_OK)) and (os.stat(PATH_KB).st_mtime < os.stat(PATH_NAMEDICT).st_mtime) and (os.access(PATH_FRAGMENTS, os.F_OK)) and (os.stat(PATH_NAMEDICT).st_mtime <= os.stat(PATH_FRAGMENTS).st_mtime):
+			file_namedict = open(PATH_NAMEDICT, 'rb')
+			file_fragments = open(PATH_FRAGMENTS, 'rb')
+
+			self.name_dict = pickle.load(file_namedict)
+			self.fragments = pickle.load(file_fragments)
+
+			file_namedict.close()
+			file_fragments.close()
 		else:
-			namedict_file = open(PATH_NAMEDICT, 'wb')
+			file_namedict = open(PATH_NAMEDICT, 'wb')
+			file_fragments = open(PATH_FRAGMENTS, 'wb')
+
 			line = 1
 			text = self.get_data_at(line, 1)
 
 			while text != None:
 				ent_type = self.get_ent_type(line)
-				
+
 				if ent_type in ["person", "preson:artist"]:
 					if ent_type == "person":
 						#whole_names = self.get_data_at(line, person_alias).split(KB_MULTIVALUE_DELIM)
 						whole_names = [self.get_data_at(line, person_name)]
-						
+
 					#elif ent_type == "artist":
 					#	whole_names = self.get_data_at(line, artist_other).split(KB_MULTIVALUE_DELIM)
 					#	whole_names.append(self.get_data_at(line, artist_preferred))
@@ -132,7 +140,7 @@ class KnowledgeBaseCZ(object):
 
 					# creates subnames
 					names = self.get_subnames(whole_names, ent_type, line)
-					
+
 					for name in names:
 						name = remove_accent(name).lower()
 						if name not in self.name_dict:
@@ -141,15 +149,19 @@ class KnowledgeBaseCZ(object):
 							self.name_dict[name].add(line)
 				line += 1
 				text = self.get_data_at(line, 1)
-			pickle.dump(self.name_dict, namedict_file, pickle.HIGHEST_PROTOCOL)
-			namedict_file.close()
+			pickle.dump(self.name_dict, file_namedict, pickle.HIGHEST_PROTOCOL)
+			pickle.dump(self.fragments, file_fragments, pickle.HIGHEST_PROTOCOL)
+
+			file_namedict.close()
+			file_fragments.close()
+
 
 	def get_subnames(self, whole_names, ent_type, line):
 		'''
 		From a list of whole names for a given person, it creates a set of all possible subnames.
 		For example, for the name name "George Washington", it creates a set containing two subnames - "George" and "Washington".
 		'''
-		
+
 		forbidden = ["Pán", "Pani", "Svatý"]
 		#roles = ["Baron", "Prince", "Duke", "Earl", "King", "Pope", "Queen", "Artist", "Painter"]
 		regex_place = re.compile(r" (z|ze) .*")
@@ -169,17 +181,17 @@ class KnowledgeBaseCZ(object):
 		#	for other_role in other_roles:
 		#		if other_role and " " not in other_role:
 		#			roles.add(other_role)
-		if ent_type == "person":
-			professions = self.get_data_for(line, "POVOLANI").split("|")
-			for profession in professions:
-				if profession:
-					roles.add(profession)
-
-		for role in roles:
-			role = role.lower()
-			names.add(role)
-			self.fragments.add(role)
-			self.fragments.add(role.title())
+#		if ent_type == "person":
+#			professions = self.get_data_for(line, "POVOLANI").split("|")
+#			for profession in professions:
+#				if profession:
+#					roles.add(profession)
+#
+#		for role in roles:
+#			role = role.lower()
+#			names.add(role)
+#			self.fragments.add(role)
+#			self.fragments.add(role.decode('utf8').title())
 
 		for whole_name in whole_names:
 
@@ -239,65 +251,65 @@ class KnowledgeBaseCZ(object):
 		Číslování řádků od 1 a sloupců od 0, podle "ner.py".
 		Ovšem SharedKB čísluje řádky i sloupce od 1.
 		'''
-		
+
 		return self.kb_shm.dataAt(line, column + 1)
-	
+
 	def get_data_at(self, line, col):
 		'''
 		Číslování řádků i sloupců od 1.
 		'''
-		
+
 		return self.kb_shm.dataAt(line, col)
-	
+
 	def get_data_for(self, line, col_name):
 		'''
 		Číslování řádků od 1.
 		'''
-		
+
 		return self.kb_shm.dataFor(line, col_name)
-	
+
 	def get_head_at(self, line, col):
 		'''
 		Číslování řádků i sloupců od 1.
 		'''
-		
+
 		return self.kb_shm.headAt(line, col)
-	
+
 	def get_head_for(self, ent_type, col):
 		'''
 		Číslování sloupců od 1.
 		'''
-		
+
 		return self.kb_shm.headFor(ent_type, col)
-	
+
 	def get_head_col(self, ent_type, col_name):
 		'''
 		Vrátí číslo sloupce pro požadovaný ent_type a jméno sloupce.
 		'''
-		
+
 		return self.kb_shm.headCol(ent_type, col_name)
-	
+
 	def get_complete_data(self, line, delim='\t'):
 		'''
 		Vrátí tuple (počet sloupců, celý řádek), kde v jednom řetězci je celý řádek pro požadovaný line, tak jak je v KB.
 		Parametr delim umožňuje změnit oddělovač sloupců.
 		'''
-		
-		text_line = ""  
+
+		text_line = ""
 		col = 1
 		text = self.get_data_at(line, col)
-		
+
 		if text != None:
 			text_line += text
-			col += 1  
+			col += 1
 			text = self.get_data_at(line, col)
-		
+
 		while text != None:
 			text_line += delim
 			text_line += text
 			col += 1
 			text = self.get_data_at(line, col)
-		
+
 		return (col-1, text_line)
 
 	def get_complete_head(self, ent_type, delim='\t'):
@@ -305,22 +317,22 @@ class KnowledgeBaseCZ(object):
 		Vrátí tuple (počet sloupců, celý řádek), kde v jednom řetězci je celý řádek pro požadovaný line, tak jak je v KB.
 		Parametr delim umožňuje změnit oddělovač sloupců.
 		'''
-		
-		text_line = ""  
+
+		text_line = ""
 		col = 1
 		text = self.get_head_for(ent_type, col)
-		
+
 		if text != None:
 			text_line += text
-			col += 1  
+			col += 1
 			text = self.get_head_for(ent_type, col)
-		
+
 		while text != None:
 			text_line += delim
 			text_line += text
 			col += 1
 			text = self.get_head_for(ent_type, col)
-		
+
 		return (col-1, text_line)
 
 	def get_complete_ent_pretty(self, line):
@@ -328,47 +340,47 @@ class KnowledgeBaseCZ(object):
 		Vrátí tuple (počet sloupců, celý řádek), kde v jednom řetězci je celý řádek pro požadovaný line, tak jak je v KB.
 		Parametr delim umožňuje změnit oddělovač sloupců.
 		'''
-		
-		text_line = ""  
+
+		text_line = ""
 		col = 1
 		ent_type = self.get_ent_type(line)
 		text_head = self.get_head_for(ent_type, col)
 		text_data = self.get_data_at(line, col)
-		
+
 		if (text_head != None) and (text_data != None):
 			text_line += text_head + ": " + text_data
 			col += 1
 			text_head = self.get_head_for(ent_type, col)
 			text_data = self.get_data_at(line, col)
-		
+
 		while (text_head != None) and (text_data != None):
 			text_line += "\n"
 			text_line += text_head + ": " + text_data
 			col += 1
 			text_head = self.get_head_for(ent_type, col)
 			text_data = self.get_data_at(line, col)
-		
+
 		return (col - 1, text_line)
-	
+
 	def get_ent_type(self, line):
 		"""Returns a type of an entity at the line of the knowledge base"""
-		
+
 		return self.kb_shm.dataType(line)
 
 	def people_named(self, subname):
 		"""
 		Returns all names (KB ids) containing a given subname.
 		"""
-		
+
 		return self.name_dict.get(subname, set())
-	
+
 	def get_score(self, line):
 		"""
 		Returns disambiguation score based on Wikipedia statistics and score based on other metrics.
 		"""
 
 		result = self.get_data_for(line, "CONFIDENCE")
-		
+
 		try:
 			if not result:
 				return 0
@@ -431,48 +443,48 @@ class KbDaemon(object):
 			self.ps.terminate()
 			self.ps.wait()
 			raise
-		
+
 		print_dbg(output)
-	
+
 		if (self.ps.poll() != None):
 			ps_exitcode = self.ps.wait()
-	
+
 			self.stdout.seek(0)
 			self.stderr.seek(0)
 			ps_stdout = self.stdout.read()
 			ps_stderr = self.stderr.read()
-	
+
 			sys.stderr.write("%s [EXITCODE]:\n%s\n" % (PATH_KB_DAEMON, ps_exitcode))
 			if (ps_stdout):
 				sys.stderr.write("%s [STDOUT]:\n%s\n" % (PATH_KB_DAEMON, ps_stdout))
 			if (ps_stderr):
 				sys.stderr.write("%s [STDERR]:\n%s\n" % (PATH_KB_DAEMON, ps_stderr))
-	
+
 			self.stdout.close()
 			self.stderr.close()
 			self.ps = None
 			raise RuntimeError("\"%s\" has failed to start." % (PATH_KB_DAEMON))
-	
+
 	def stop(self):
 		if not self.ps:
 			return
-	
+
 		self.ps.terminate()
 		ps_exitcode = self.ps.wait()
-	
+
 		self.stdout.seek(0)
 		self.stdout.readline()
 		self.stderr.seek(0)
 		ps_stdout = self.stdout.read()
 		ps_stderr = self.stderr.read()
-	
+
 		if (ps_exitcode != 0):
 			sys.stderr.write("%s [EXITCODE]:\n%s\n" % (PATH_KB_DAEMON, ps_exitcode))
 		if (ps_stdout):
 			sys.stderr.write("%s [STDOUT]:\n%s\n" % (PATH_KB_DAEMON, ps_stdout))
 		if (ps_stderr):
 			sys.stderr.write("%s [STDERR]:\n%s\n" % (PATH_KB_DAEMON, ps_stderr))
-	
+
 		self.stdout.close()
 		self.stderr.close()
 		self.ps = None
