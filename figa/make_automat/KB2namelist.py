@@ -45,6 +45,13 @@ args = parser.parse_args()
 # a dictionary for storing results
 dictionary = {}
 
+# automata variants config
+atm_config = AutomataVariants.DEFAULT
+if args.lowercase:
+	atm_config |= AutomataVariants.LOWERCASE
+if args.autocomplete:
+	atm_config |= AutomataVariants.NONACCENT
+
 # loading HEAD-KB file
 headKB = metrics_knowledge_base.getDictHeadKB()
 
@@ -510,15 +517,17 @@ if __name__ == "__main__":
 		subnames = set()
 		for base, inflections in alternatives.items():
 			inflections.add(base)
-			# TODO: lowercase | non-accent variant configuration
-			for subname in Persons.get_subnames(inflections):
+			for subname in Persons.get_subnames(inflections, atm_config):
 				if subname not in dictionary:
 					dictionary[subname] = set()
 					dictionary[subname].add('N')
 
 		# Pronouns with first lower and first upper with 'N'
 		pronouns = ["on", "ho", "mu", "něm", "jím", "ona", "jí", "ní"]
-		pronouns += [pronoun.capitalize() for pronoun in pronouns]
+		if (not args.lowercase):
+			pronouns += [pronoun.capitalize() for pronoun in pronouns]
+		if (args.autocomplete):
+			pronouns += [remove_accent(pronoun) for pronoun in pronouns]
 		dictionary.update(dict.fromkeys(pronouns, 'N'))
 
 	# geting nationalities
