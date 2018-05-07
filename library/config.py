@@ -7,9 +7,9 @@ from enum import Enum
 
 
 class AutomataVariants(Enum):
-	STANDARD = 1 << 0
-	LOWERCASE = 1 << 1
-	NONACCENT = 1 << 2
+	DEFAULT = 0
+	LOWERCASE = 1 << 0
+	NONACCENT = 1 << 1
 
 
 	def __and__(self, other):

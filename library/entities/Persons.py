@@ -23,7 +23,7 @@ class Persons():
 
 
 	@classmethod
-	def get_subnames(self, whole_names, config = AutomataVariants.STANDARD):
+	def get_subnames(self, whole_names, config = AutomataVariants.DEFAULT):
 		'''
 		From a list of whole names for a given person, it creates a set of all possible subnames.
 		For example:
@@ -57,7 +57,7 @@ class Persons():
 			# normalize whitespaces
 			whole_name = regex.sub('\s+', ' ', whole_name)
 			# remove a part of the name with location information (e.g. " of Polestown" from the name "Richard Butler of Polestown")
-			whole_name = regex_location_remove.sub("", whole_name)
+			whole_name = regex_location_remove.sub("", whole_name).title()
 
 			# split the name only (without prepositions) to the parts
 			subnames = regex_prepositions_remove.sub(" ", whole_name).split()
@@ -80,31 +80,39 @@ class Persons():
 
 						# add non-accent variant (if required) to processing (only if not same as base name)
 						for subname in [subname, subname_without_accent] if (AutomataVariants.isNonaccent(config) and subname != subname_without_accent) else [subname]:
-							# add lowercase variant (if required) to processing
-							for final_subname in [subname, subname.lower()] if AutomataVariants.isLowercase(config) else [subname]:
-								names.add(final_subname)
-								if regex.match(regex_prefixes_only_check, final_subname):
-									# from "O'Connor" add also surname only without prefix => "Connor"
-									names.add(regex_prefixes_only.sub('', final_subname))
-									# add also a variant with small letter starting prefix => "o'Conor"
-									if (not final_subname[0].islower()):
-										names.add(final_subname[0].lower() + final_subname[1:])
+							if (AutomataVariants.isLowercase(config)):
+								subname = subname.lower()
+							names.add(subname)
+							if regex.match(regex_prefixes_only_check, subname):
+								# add also a variant with small letter starting prefix => "o'Conor"
+								if (not subname[0].islower()):
+									names.add(subname[0].lower() + subname[1:])
+
+								# from "O'Connor" add also surname only without prefix => "Connor"
+								nonprefix = regex_prefixes_only.sub('', subname)
+								names.add(nonprefix.lower() if AutomataVariants.isLowercase(config) else nonprefix.capitalize())
 
 			# search for names with preposition, i.e. "van Eyck"
-			preposition_name = regex_prepositions_name.search(whole_name)
+			preposition_name = regex_prepositions_name.search(whole_name.title())
 			if preposition_name:
 				match = preposition_name.group()
 
 				# normalize name to start with capital, including name with preposition (for example "van Eyck" => "Van Eyck")
-				subname = match[0].upper() + match[1:]
+				# Warning: contain space on the beginning to avoid match "Ivan Novák" as "van Novák" => it is needed to get substring from second char
+				subname = match[1:].title()
 				subname_without_accent = remove_accent(subname)
 
 				# add non-accent variant (if required) to processing (only if not same as base name)
 				for subname in [subname, subname_without_accent] if (AutomataVariants.isNonaccent(config) and subname != subname_without_accent) else [subname]:
-					# add lowercase variant (if required) to processing
-					for final_subname in [subname, subname.lower()] if AutomataVariants.isLowercase(config) else [subname]:
-						names.add(final_subname)
-						# add also a variant with small letter starting preposition => "van Eyck"
-						if (not final_subname[0].islower()):
-							names.add(final_subname[0].lower() + final_subname[1:])
+					if (AutomataVariants.isLowercase(config)):
+						subname = subname.lower()
+					names.add(subname)
+
+					# add also a variant with small letter starting preposition => "van Eyck"
+					if (not subname[0].islower()):
+						names.add(subname[0].lower() + subname[1:])
 		return names
+
+	@classmethod
+	def add_to_dictionary_by_config(self, subname, dictionary, config = AutomataVariants.DEFAULT):
+		dictionary.add(subname.lower() if AutomataVariants.isLowercase(config) else subname)
