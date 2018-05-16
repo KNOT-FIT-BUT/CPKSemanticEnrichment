@@ -26,6 +26,7 @@ import argparse
 import os
 import re
 import sys
+from library.config import AutomataVariants
 from library.utils import remove_accent
 from library.entities.Persons import Persons
 from importlib import reload
