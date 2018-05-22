@@ -104,12 +104,19 @@ export PYTHONPATH=../../:$PYTHONPATH
 CURRENT_VERSION=`cat ../../VERSION`
 F_PERSONS_WITH_GENDERS="persons_with_genders_${CURRENT_VERSION}"
 F_CZECHNAMES="czechnames_${CURRENT_VERSION}.out"
+F_CZECHNAMES_INVALID="${F_CZECHNAMES}.invalid"
+# temporary files to avoid skipping of generating target files, when generating failed or aborted
+F_TMP_PERSONS_WITH_GENDERS="_${F_PERSONS_WITH_GENDERS}"
+F_TMP_CZECHNAMES="_${F_CZECHNAMES}"
 # Skip generating some files if exist, because they are very time consumed
 if ! test -f "${F_PERSONS_WITH_GENDERS}"; then
-  python get_persons_with_genders.py -p "$KB" > "${F_PERSONS_WITH_GENDERS}"
+  python get_persons_with_genders.py -p "$KB" > "${F_TMP_PERSONS_WITH_GENDERS}"
+  mv "${F_TMP_PERSONS_WITH_GENDERS}" "${F_PERSONS_WITH_GENDERS}"
 fi
-if ! test -f "${F_CZECHNAMES}"; then
-  python3 czechnames/namegen.py -o "${F_CZECHNAMES}" -x "${F_CZECHNAMES}.invalid" "${F_PERSONS_WITH_GENDERS}"
+
+if ! test -f "${F_CZECHNAMES}" || test `stat -c %Y "${F_CZECHNAMES}"` -lt `stat -c %Y "${F_PERSONS_WITH_GENDERS}"`; then
+  python3 czechnames/namegen.py -o "${F_TMP_CZECHNAMES}" -x "${F_CZECHNAMES_INVALID}" "${F_PERSONS_WITH_GENDERS}"
+  mv "${F_TMP_CZECHNAMES}" "${F_CZECHNAMES}"
 fi
 
 #=====================================================================
