@@ -109,7 +109,9 @@ class KnowledgeBaseCZ(object):
 
 		# Proto aby se nemusela znova procházet KB, vytvoří se soubor PATH_NAMEDICT.
 		# Namedict se bude načítat z něj pokud PATH_KB bude starší než PATH_NAMEDICT - tím dojde k urychlení.
-		if (os.access(PATH_NAMEDICT, os.F_OK)) and (os.stat(PATH_KB).st_mtime < os.stat(PATH_NAMEDICT).st_mtime) and (os.access(PATH_FRAGMENTS, os.F_OK)) and (os.stat(PATH_NAMEDICT).st_mtime <= os.stat(PATH_FRAGMENTS).st_mtime):
+		if os.access(PATH_NAMEDICT, os.F_OK) and os.stat(PATH_KB).st_mtime < os.stat(PATH_NAMEDICT).st_mtime and \
+		   os.access(PATH_FRAGMENTS, os.F_OK) and os.stat(PATH_NAMEDICT).st_mtime <= os.stat(PATH_FRAGMENTS).st_mtime and \
+                   os.path.getsize(PATH_NAMEDICT) > 0 and os.path.getsize(PATH_FRAGMENTS) > 0:
 			file_namedict = open(PATH_NAMEDICT, 'rb')
 			file_fragments = open(PATH_FRAGMENTS, 'rb')
 
