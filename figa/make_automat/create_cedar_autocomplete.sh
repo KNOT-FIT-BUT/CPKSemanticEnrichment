@@ -85,6 +85,10 @@ cd `dirname "${LAUNCHED}"`
 # ale soucasne je treba zmenit cestu ke KB, jinak bychom problem posunuli jinam
 KB="${KB_WORKDIR}/${KB}"
 
+
+# cesta pro import modulů do Python skriptů
+export PYTHONPATH=../../:$PYTHONPATH
+
 #======================================================================
 # vytvorenie zoznamu klucov entit v KB a vyhodenie fragmentov zo zoznamu
 python3 KB2namelist.py -a < "$KB" | tr -s ' ' | grep -v -e "[^;]N" > intext_auto
