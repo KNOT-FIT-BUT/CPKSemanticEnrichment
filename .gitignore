@@ -1,11 +1,31 @@
-HEAD-KB
+# downloaded files
+VERSION
 KB*.all
-KB-HEAD.*
+HEAD-KB
+wiki_stats
+morph
+morph/*
 
+
+# build & runtime files
 figa/figav1.0
+figa/make_automat/utf2symbols
+figa/make_automat/utf8_valid
+
 
 /**/*~
 /**/*.o
 /**/*.so
 /**/*.pyc
 /**/*.ct
+/**/__pycache__
+
+
+# generated & cached files
+KB-HEAD.*
+figa/make_automat/persons_with_genders_[0-9]*
+figa/make_automat/czechnames_[0-9]*.out*
+figa/make_automat/namegen.unknown.*
+figa/make_automat/stop_list.*
+ner_fragments.pkl
+ner_namedict.pkl
