@@ -95,3 +95,6 @@ echo
 
 echo "creating CedarTree for NER"
 ./figa/make_automat/create_cedar.sh -c -k KBstatsMetrics.all
+
+echo "creating autocomplete for NER"
+./figa/make_automat/create_cedar_autocomplete.sh -c -k KBstatsMetrics.all
