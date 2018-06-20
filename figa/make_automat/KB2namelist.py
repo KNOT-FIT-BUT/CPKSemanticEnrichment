@@ -53,8 +53,8 @@ if args.lowercase:
 if args.autocomplete:
 	atm_config |= AutomataVariants.NONACCENT
 
-# loading HEAD-KB file
-headKB = metrics_knowledge_base.getDictHeadKB()
+# loading KB struct
+kb_struct = metrics_knowledge_base.KnowledgeBase()
 
 # multiple values delimiter
 KB_MULTIVALUE_DELIM = metrics_knowledge_base.KB_MULTIVALUE_DELIM
@@ -205,8 +205,8 @@ def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 
 	#if _type in ["event"]:
 	#	if len(re.findall(r"^[0-9]{4} (Summer|Winter) Olympics$", _key)) != 0:
-	#		location = _fields[headKB['event']['LOCATION']]
-	#		year = _fields[headKB['event']['START DATE']][:4]
+	#		location = kb_struct.get_data_for(_fields, 'LOCATION')
+	#		year = kb_struct.get_data_for(_fields, 'START DATE')[:4]
 	#		if year and location and "|" not in location:
 	#			add("Olympics in " + location + " in " + year, _value, _type) # 1928 Summer Olympics -> Olympics in Amsterdam in 1928
 	#			add("Olympics in " + year + " in " + location, _value, _type) # 1928 Summer Olympics -> Olympics in 1928 in Amsterdam
@@ -214,12 +214,12 @@ def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 	#			add("Olympic Games in " + year + " in " + location, _value, _type) # 1928 Summer Olympics -> Olympic Games in 1928 in Amsterdam
 
 	if _type in ["geoplace:populatedPlace", 'geoplace:mountain', 'geoplace:castle', 'geoplace:lake', 'geo:mountainRange', 'geoplace:observationTower', 'geoplace:waterfall']:
-		description = _fields[headKB[_type]['INFO']]
+		description = kb_struct.get_data_for(_fields, 'INFO')
 		if _key in description:
 			if _type == 'geoplace:populatedPlace':
-				country = _fields[headKB[_type]['LOKACE']]
+				country = kb_struct.get_data_for(_fields, 'LOKACE')
 			else:
-				country = _fields[headKB[_type]['STAT']]
+				country = kb_struct.get_data_for(_fields, 'STAT')
 			if country not in _key:
 				add(_key + ", " + country, _value, _type) # Peking -> Peking, China
 				add(re.sub("United States", "US", _key + ", " + country), _value, _type)
@@ -272,12 +272,12 @@ UNWANTED_MATCH = re.compile(r"(Princ|Svatý|,|z|[0-9])")
 def process_person(_fields, _line_num, alt_names):
 	""" Processes a line with entity of person type. """
 
-	aliases = _fields[headKB['person']['ALIAS']].split(KB_MULTIVALUE_DELIM)
-	aliases.append(_fields[headKB['person']['JMENO']])
+	aliases = kb_struct.get_data_for(_fields, 'ALIAS').split(KB_MULTIVALUE_DELIM)
+	aliases.append(kb_struct.get_data_for(_fields, 'JMENO'))
 	aliases = (a for a in aliases if a.strip() != "")
 
-	name = _fields[headKB['person']['JMENO']]
-	confidence = float(_fields[headKB['person']['CONFIDENCE']])
+	name = kb_struct.get_data_for(_fields, 'JMENO')
+	confidence = float(kb_struct.get_data_for(_fields, 'CONFIDENCE'))
 
 	CONFIDENCE_THRESHOLD = 20
 
@@ -296,12 +296,12 @@ def process_person(_fields, _line_num, alt_names):
 def process_artist(_fields, _line_num, alt_names):
 	""" Processes a line with entity of artist type. """
 
-	aliases = _fields[headKB['person:artist']['ALIAS']].split(KB_MULTIVALUE_DELIM)
-	aliases.append(_fields[headKB['person:artist']['JMENO']])
+	aliases = kb_struct.get_data_for(_fields, 'ALIAS').split(KB_MULTIVALUE_DELIM)
+	aliases.append(kb_struct.get_data_for(_fields, 'JMENO'))
 	aliases = (a for a in aliases if a.strip() != "")
 
-	name = _fields[headKB['person:artist']['JMENO']]
-	confidence = float(_fields[headKB['person:artist']['CONFIDENCE']])
+	name = kb_struct.get_data_for(_fields, 'JMENO')
+	confidence = float(kb_struct.get_data_for(_fields, 'CONFIDENCE'))
 	surname = ""
 
 	CONFIDENCE_THRESHOLD = 15
@@ -321,121 +321,122 @@ def process_artist(_fields, _line_num, alt_names):
 def process_other(_fields, _line_num, alt_names):
 	""" Processes a line with entity of location type. """
 
-	aliases = _fields[headKB[_fields[0]]['ALIAS']].split(KB_MULTIVALUE_DELIM)
-	aliases.append(_fields[headKB[_fields[0]]['NAZEV']])
+	aliases = kb_struct.get_data_for(_fields, 'ALIAS').split(KB_MULTIVALUE_DELIM)
+	aliases.append(kb_struct.get_data_for(_fields, 'NAZEV'))
 	for t in aliases:
 		add_to_dictionary(t, _line_num, _fields[0], _fields, alt_names)
 
 def process_location(_fields, _line_num):
 	""" Processes a line with entity of location type. """
 
-	aliases = _fields[headKB['location']['ALTERNATIVE NAME']].split(KB_MULTIVALUE_DELIM)
-	aliases.append(_fields[headKB['location']['NAME']])
+	aliases = kb_struct.get_data_for(_fields, 'ALTERNATIVE NAME').split(KB_MULTIVALUE_DELIM)
+	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
 	for t in aliases:
 		add_to_dictionary(t, _line_num, "location", _fields)
 
 def process_artwork(_fields, _line_num):
 	""" Processes a line with entity of artwork type. """
 
-	aliases = _fields[headKB['artwork']['ALIAS']].split(KB_MULTIVALUE_DELIM)
-	aliases.append(_fields[headKB['artwork']['NAME']])
+	aliases = kb_struct.get_data_for(_fields, 'ALIAS').split(KB_MULTIVALUE_DELIM)
+	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
 	for t in aliases:
 		add_to_dictionary(t, _line_num, "artwork", _fields)
 
 def process_museum(_fields, _line_num):
 	""" Processes a line with entity of museum type. """
 
-	aliases = _fields[headKB['museum']['ALIAS']].split(KB_MULTIVALUE_DELIM)
-	aliases.append(_fields[headKB['museum']['NAME']])
+	aliases = kb_struct.get_data_for(_fields, 'ALIAS').split(KB_MULTIVALUE_DELIM)
+	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
 	for t in aliases:
 		add_to_dictionary(t, _line_num, "museum", _fields)
 
 def process_fieldsvent(_fields, _line_num):
 	""" Processes a line with entity of event type. """
 
-	aliases = _fields[headKB['event']['ALIAS']].split(KB_MULTIVALUE_DELIM)
-	aliases.append(_fields[headKB['event']['NAME']])
+	aliases = kb_struct.get_data_for(_fields, 'ALIAS').split(KB_MULTIVALUE_DELIM)
+	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
 	for t in aliases:
 		add_to_dictionary(t, _line_num, "event", _fields)
 
 def process_visual_art_form(_fields, _line_num):
 	""" Processes a line with entity of visual_art_form type. """
 
-	aliases = _fields[headKB['visual_art_form']['ALIAS']].split(KB_MULTIVALUE_DELIM)
-	aliases.append(_fields[headKB['visual_art_form']['NAME']])
+	aliases = kb_struct.get_data_for(_fields, 'ALIAS').split(KB_MULTIVALUE_DELIM)
+	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
 	for t in aliases:
 		add_to_dictionary(t, _line_num, "visual_art_form", _fields)
 
 def process_visual_art_medium(_fields, _line_num):
 	""" Processes a line with entity of visual_art_medium type. """
 
-	aliases = _fields[headKB['visual_art_medium']['ALIAS']].split(KB_MULTIVALUE_DELIM)
-	aliases.append(_fields[headKB['visual_art_medium']['NAME']])
+	aliases = kb_struct.get_data_for(_fields, 'ALIAS').split(KB_MULTIVALUE_DELIM)
+	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
 	for t in aliases:
 		add_to_dictionary(t, _line_num, "visual_art_medium", _fields)
 
 def process_visual_art_genre(_fields, _line_num):
 	""" Processes a line with entity of visual_art_genre type. """
 
-	aliases = _fields[headKB['visual_art_genre']['ALIAS']].split(KB_MULTIVALUE_DELIM)
-	aliases.append(_fields[headKB['visual_art_genre']['NAME']])
+	aliases = kb_struct.get_data_for(_fields, 'ALIAS').split(KB_MULTIVALUE_DELIM)
+	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
 	for t in aliases:
 		add_to_dictionary(t, _line_num, "visual_art_genre", _fields)
 
 def process_art_period_movement(_fields, _line_num):
 	""" Processes a line with entity of art_period_movement type. """
 
-	aliases = _fields[headKB['art_period_movement']['ALIAS']].split(KB_MULTIVALUE_DELIM)
-	aliases.append(_fields[headKB['art_period_movement']['NAME']])
+	aliases = kb_struct.get_data_for(_fields, 'ALIAS').split(KB_MULTIVALUE_DELIM)
+	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
 	for t in aliases:
 		add_to_dictionary(t, _line_num, "art_period_movement", _fields)
 
 def process_nationality(_fields, _line_num):
 	""" Processes a line with entity of nationalities type. """
 
-	aliases = _fields[headKB['nationality']['ADJECTIVAL FORM']].split(KB_MULTIVALUE_DELIM)
+	aliases = kb_struct.get_data_for(_fields, 'ADJECTIVAL FORM').split(KB_MULTIVALUE_DELIM)
 	for t in aliases:
 		add_to_dictionary(t, _line_num, "nationality", _fields)
 
 def process_mythology(_fields, _line_num):
 	""" Processes a line with entity of mythology type. """
 
-	aliases = _fields[headKB['mythology']['ALTERNATIVE NAME']].split(KB_MULTIVALUE_DELIM)
-	aliases.append(_fields[headKB['mythology']['NAME']])
+	aliases = kb_struct.get_data_for(_fields, 'ALTERNATIVE NAME').split(KB_MULTIVALUE_DELIM)
+	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
 	for t in aliases:
 		length = t.count(" ") + 1
-		if length >= 2 or t == _fields[headKB['mythology']['NAME']]:
+		if length >= 2 or t == kb_struct.get_data_for(_fields, 'NAME'):
 			add_to_dictionary(t, _line_num, "mythology", _fields)
 
 def process_family(_fields, _line_num):
 	""" Processes a line with entity of family type. """
 
-	aliases = _fields[headKB['family']['ALTERNATIVE NAME']].split(KB_MULTIVALUE_DELIM)
-	aliases.append(_fields[headKB['family']['NAME']])
+	aliases = kb_struct.get_data_for(_fields, 'ALTERNATIVE NAME').split(KB_MULTIVALUE_DELIM)
+	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
 	for t in aliases:
 		add_to_dictionary(t, _line_num, "family", _fields)
 
 def process_group(_fields, _line_num):
 	""" Processes a line with entity of group type. """
 
-	aliases = _fields[headKB['group']['ALTERNATIVE NAME']].split(KB_MULTIVALUE_DELIM)
-	aliases.append(_fields[headKB['group']['NAME']])
+	aliases = kb_struct.get_data_for(_fields, 'ALTERNATIVE NAME').split(KB_MULTIVALUE_DELIM)
+	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
 	for t in aliases:
 		add_to_dictionary(t, _line_num, "group", _fields)
 
 def process_uri(_fields, _line_num):
 	""" Processes all URIs for a given entry. """
 
-	entity_type = fields[1]
+	entity_head = kb_struct.get_ent_head(_fields)
+
 	uris = []
-	if 'WIKIPEDIA URL' in headKB[entity_type]:
-		uris.append(_fields[headKB[entity_type]['WIKIPEDIA URL']])
-	if 'DBPEDIA URL' in headKB[entity_type]:
-		uris.append(_fields[headKB[entity_type]['DBPEDIA URL']])
-	if 'FREEBASE URL' in headKB[entity_type]:
-		uris.append(_fields[headKB[entity_type]['FREEBASE URL']])
-	if 'OTHER URL' in headKB[entity_type]:
-		uris.extend(_fields[headKB[entity_type]['OTHER URL']].split(KB_MULTIVALUE_DELIM))
+	if 'WIKIPEDIA URL' in entity_head:
+		uris.append(kb_struct.get_data_for(_fields, 'WIKIPEDIA URL'))
+	if 'DBPEDIA URL' in entity_head:
+		uris.append(kb_struct.get_data_for(_fields, 'DBPEDIA URL'))
+	if 'FREEBASE URL' in entity_head:
+		uris.append(kb_struct.get_data_for(_fields, 'FREEBASE URL'))
+	if 'OTHER URL' in entity_head:
+		uris.extend(kb_struct.get_data_for(_fields, 'OTHER URL').split(KB_MULTIVALUE_DELIM))
 	uris = [u for u in uris if u.strip() != ""]
 
 	for u in uris:
@@ -480,36 +481,38 @@ if __name__ == "__main__":
 		line_num = 1
 		for l in sys.stdin:
 			fields = l[:-1].split("\t")
-			if fields[0] == "person:artist":
+			ent_type = kb_struct.get_ent_type(fields)
+
+			if ent_type == "person:artist":
 				process_artist(fields, str(line_num), alternatives)
-			elif fields[0] == "person":
+			elif ent_type == "person":
 				process_person(fields, str(line_num), alternatives)
 			else:
 				process_other(fields, str(line_num), alternatives)
 			'''
-			elif fields[1] == "location":
+			elif ent_type == "location":
 				process_location(fields, str(line_num))
-			elif fields[1] == "artwork":
+			elif ent_type == "artwork":
 				process_artwork(fields, str(line_num))
-			elif fields[1] == "event":
+			elif ent_type == "event":
 				process_fieldsvent(fields, str(line_num))
-			elif fields[1] == "visual_art_form":
+			elif ent_type == "visual_art_form":
 				process_visual_art_form(fields, str(line_num))
-			elif fields[1] == "visual_art_genre":
+			elif ent_type == "visual_art_genre":
 				process_visual_art_genre(fields, str(line_num))
-			elif fields[1] == "art_period_movement":
+			elif ent_type == "art_period_movement":
 				process_art_period_movement(fields, str(line_num))
-			elif fields[1] == "visual_art_medium":
+			elif ent_type == "visual_art_medium":
 				process_visual_art_medium(fields, str(line_num))
-			elif fields[1] == "nationality":
+			elif ent_type == "nationality":
 				process_nationality(fields, str(line_num))
-			elif fields[1] == "museum":
+			elif ent_type == "museum":
 				process_museum(fields, str(line_num))
-			elif fields[1] == "mythology":
+			elif ent_type == "mythology":
 				process_mythology(fields, str(line_num))
-			elif fields[1] == "family":
+			elif ent_type == "family":
 				process_family(fields, str(line_num))
-			elif fields[1] == "group":
+			elif ent_type == "group":
 				process_group(fields, str(line_num))
 			'''
 			line_num += 1
