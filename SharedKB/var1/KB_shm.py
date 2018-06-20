@@ -192,7 +192,7 @@ class KB_shm:
 		self.KB_shm_p = c_void_p(0)
 		self.KB_shm_fd = c_int(-1)
 		self.headFor_Boost = {}
-	
+
 	def start(self):
 		'''
 		Připojí sdílenou paměť.
@@ -200,12 +200,12 @@ class KB_shm:
 		self.KB_shm_fd = c_int( connectKB_shm() )
 		if self.KB_shm_fd.value < 0:
 			RuntimeError("connectKB_shm")
-		
+
 		self.KB_shm_p = c_void_p( mmapKB_shm(self.KB_shm_fd) )
 		if self.KB_shm_p.value == None:
 			disconnectKB_shm(self.KB_shm_p, self.KB_shm_fd)
 			RuntimeError("mmapKB_shm")
-	
+
 	def end(self):
 		'''
 		Odpojí sdílenou paměť.
@@ -214,12 +214,12 @@ class KB_shm:
 		status = c_int( disconnectKB_shm(self.KB_shm_p, self.KB_shm_fd) )
 		if status.value != 0:
 			RuntimeError("disconnectKB_shm")
-		
+
 		self.__init__()
-	
+
 	def headAt(self, line):
 		return c_char_p( KBSharedMemHeadAt( self.KB_shm_p, line ) ).value
-	
+
 	def headFor(self, prefix):
 		if self.headFor_Boost.has_key(prefix):
 			result = c_char_p( KBSharedMemHeadAt( self.KB_shm_p, self.headFor_Boost[prefix] ) ).value
@@ -228,7 +228,7 @@ class KB_shm:
 			result = c_char_p( KBSharedMemHeadFor_Boost( self.KB_shm_p, prefix, byref(line) ) ).value
 			self.headFor_Boost[prefix] = line
 		return result
-	
+
 	def dataAt(self, line):
 		return c_char_p( KBSharedMemDataAt( self.KB_shm_p, line ) ).value
 #

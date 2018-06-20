@@ -36,9 +36,9 @@ def print_dbg(text=""):
 	callerframerecord = inspect.stack()[1]
 	frame = callerframerecord[0]
 	info = inspect.getframeinfo(frame)
-	
+
 	head = "("+ info.filename +", "+ info.function +", "+ str(info.lineno) +")"
-	
+
 	print( head +":\n'''\n"+ text +"\n'''" )
 #
 
@@ -244,37 +244,39 @@ class KB_shm(object):
 		self.KB_shm_p = c_void_p(0)
 		self.KB_shm_fd = c_int(-1)
 		self.KB_shm_name = c_char_p(kb_shm_name)
-		self.headFor_Boost = {} # Slovník TYPE:LINE_OF_TYPE(Řádek na kterým je daný typ definován)
-		self.headCol_Boost = {} # Slovník LINE_OF_TYPE:{COLUMN_NAME:COLUMN}
-		self.headFor_Boost_reverse = {} # Slovník LINE_OF_TYPE:TYPE
-		
+		self.headLine_Boost = {} # Slovník TYPE:{SUBTYPE:LINE(Řádek na kterým je daný typ/podtyp definován)}
+		self.headCol_Boost = {} # Slovník LINE:{COLUMN_NAME:COLUMN}
+		self.headColCnt_Boost = {} # Slovník LINE:COLUMN_COUNT(Počet sloupců na daném řádku)
+		self.headType_Boost = {} # Slovník LINE:(TYPE,SUBTYPE)
+		self.multivalue_delim = "|"
+
 		self._alive = False
 		self._prepared = False
-	
+
 	def start(self, kb_shm_name=None):
 		'''
 		Připojí sdílenou paměť.
 		'''
 		assert not self._alive
-		
+
 		if kb_shm_name == None:
 			kb_shm_name = self.KB_shm_name
 		else:
 			kb_shm_name = c_char_p(kb_shm_name)
-		
+
 		self.KB_shm_fd = c_int( connectKB_shm(kb_shm_name) )
 		if self.KB_shm_fd.value < 0:
 			raise KbShmException("connectKB_shm")
-		
+
 		self.KB_shm_p = c_void_p( mmapKB_shm(self.KB_shm_fd) )
 		if self.KB_shm_p.value == None:
 			disconnectKB_shm(self.KB_shm_p, self.KB_shm_fd)
 			raise KbShmException("mmapKB_shm")
-		
+
 		self._alive = True
-		
+
 		self.prepareBoosts()
-	
+
 	def end(self):
 		'''
 		Odpojí sdílenou paměť.
@@ -284,9 +286,9 @@ class KB_shm(object):
 			status = c_int( disconnectKB_shm(self.KB_shm_p, self.KB_shm_fd) )
 			if status.value != 0:
 				raise KbShmException("disconnectKB_shm")
-		
+
 		self.__init__(self.KB_shm_name.value)
-	
+
 	def check(self, kb_shm_name=None):
 		'''
 		Zkontroluje zda je sdílená paměť k dispozici.
@@ -295,136 +297,280 @@ class KB_shm(object):
 			kb_shm_name = self.KB_shm_name
 		else:
 			kb_shm_name = c_char_p(kb_shm_name)
-		
+
 		status = c_int(0)
 		status = c_int( checkKB_shm(kb_shm_name) )
 		if status.value != 0:
 			return False
 		else:
 			return True
-	
+
 	def prepareBoosts(self):
 		assert self._alive
-		
-		self.headFor_Boost = {}
+
+		self.headLine_Boost = {}
 		self.headCol_Boost = {}
-		
+
+		PARSER_FIRST = re.compile(r"""(?ux)
+			^
+			<(?P<TYPE>[^:>]+)(?:[:](?P<SUBTYPE>[^>]+))?>
+			(?:\{(?P<FLAGS>(?:\w|[ ])*)(?:\[(?P<PREFIX_OF_VALUE>[^\]]+)\])?\})?
+			(?P<NAME>(?:\w|[ ])+)
+			$
+		""")
+		PARSER_OTHER = re.compile(r"""(?ux)
+			^
+			(?:\{(?P<FLAGS>(?:\w|[ ])*)(?:\[(?P<PREFIX_OF_VALUE>[^\]]+)\])?\})?
+			(?P<NAME>(?:\w|[ ])+)
+			$
+		""")
+
 		text = self.headAt(1, 1)
 		line = 1
 		while text != None:
-			#text = "<person>ID"
-			#splitted = re.search('^<([^>]+)>(?:\{((?:\w|[ ])*)(?:\[([^\]]+)\])?\})?((?:\w|[ ])+)$', text)
-			#print(splitted.group(4))
-			text = text[1:-1]
-			self.headFor_Boost[text] = line
-			self.headCol_Boost[line] = {}
-			#print_dbg(str(text)+": "+str(line))
+#			print('DEBUG line %d: %s' % (line, text))
+			splitted = PARSER_FIRST.search(text)
+#			print('DEBUG splitted: %s' % splitted)
+#			print('DEBUG splitted group NAME: %s' % splitted.group("NAME"))
+			head_type = splitted.group("TYPE")
+			head_subtype = splitted.group("SUBTYPE")
+			if not self.headLine_Boost.has_key(head_type):
+				self.headLine_Boost[head_type] = {}
+
+			if head_subtype:
+				self.headLine_Boost[head_type][head_subtype] = line
+				self.headType_Boost[line] = (head_type, head_subtype)
+			else:
+				self.headLine_Boost[head_type][""] = line
+				self.headType_Boost[line] = (head_type, "")
+			print_dbg(str(head_type)+"/"+str(head_subtype)+": "+str(line))
+
 			col = 1
-			self.headCol_Boost[line]["TYPE"] = col
-			#print_dbg(str(line)+", "+str("TYPE")+": "+str(col))
+			self.headCol_Boost[line] = {}
+			self.headCol_Boost[line][splitted.group("NAME")] = col
+			print_dbg(str(line)+", "+str(splitted.group("NAME"))+": "+str(col))
 			while text != None:
 				if col > 1:
-					
-					splitted = re.search('^(?:\{((?:\w|[ ])*)(?:\[([^\]]+)\])?\})?((?:\w|[ ])+)$', text)
-					self.headCol_Boost[line][splitted.group(3)] = col
-					print_dbg(str(line)+", "+str(splitted.group(3))+": "+str(col))
+					splitted = PARSER_OTHER.search(text)
+					self.headCol_Boost[line][splitted.group("NAME")] = col
+					print_dbg(str(line)+", "+str(splitted.group("NAME"))+": "+str(col))
 				col += 1
 				text = self.headAt(line, col)
+			self.headColCnt_Boost[line] = col - 1
 			line += 1
 			text = self.headAt(line, 1)
-		self.headFor_Boost_reverse = dict(zip(self.headFor_Boost.values(), self.headFor_Boost.keys()))
-		
+
 		self._prepared = True
-	
+
 	def version(self):
 		assert self._alive
 		return c_uint( KBSharedMemVersion( self.KB_shm_p ) ).value
-	
+
 	def headAt(self, line, col):
 		assert self._alive
 		return c_char_p( KBSharedMemHeadAt( self.KB_shm_p, line, col ) ).value
-	
-	def headFor(self, ent_type, col):
+
+	def headExist(self, ent_type, ent_subtype):
 		'''
-		headFor("person", 9)
+		headExist("person", "")
+
+		@param ent_type
+			Název typu entity.
+		@param ent_subtype
+			Název podtypu entity. Může obsahovat i více podtypů oddělených self.multivalue_delim.
+		@return
+			Pokud je definován typ \a ent_type a všechny jeho podtypy \a ent_subtype, pak vrátí True, jinak False.
 		'''
 		assert self._alive
-		
-		if self.headFor_Boost.has_key(ent_type):
-			line = self.headFor_Boost[ent_type]
-			result = self.headAt(line, col)
+
+		if ent_subtype:
+			ent_subtype = [""] + ent_subtype.split(self.multivalue_delim)
+		else:
+			ent_subtype = [""]
+
+		if all(self.headLine(ent_type, st) != None for st in ent_subtype):
+			result = True
+		else:
+			result = False
+		return result
+
+	def headLine(self, ent_type, ent_subtype):
+		'''
+		headLine("person", "")
+
+		@param ent_type
+			Název typu entity.
+		@param ent_subtype
+			Název podtypu entity. (HEAD-KB obsahuje na jednom řádku jeden podtyp, proto nelze zde zadat více podtypů.)
+		@return
+			Vrátí číslo řádku na kterém je definován typ \a ent_type a podtyp \a ent_subtype. Dojde-li k chybě, vrátí None.
+		'''
+		if self.headLine_Boost.has_key(ent_type) and self.headLine_Boost[ent_type].has_key(ent_subtype):
+			result = self.headLine_Boost[ent_type][ent_subtype]
 		else:
 			result = None
 		return result
-	
-	def headCol(self, ent_type, col_name):
+
+	def headFor(self, ent_type, ent_subtype, col):
 		'''
-		headCol("person", "DATE OF BIRTH")
+		headFor("person", "", 9)
+
+		Pro typ \a ent_type a podtyp \a ent_subtype vrátí název \a col-tého sloupce.
+
+		@param ent_type
+			Název typu entity.
+		@param ent_subtype
+			Název podtypu entity. Může obsahovat i více podtypů oddělených self.multivalue_delim.
+		@param col
+			Sloupec, jehož název chceme zjistit.
+		@return
+			Vrátí název \a col-tého sloupce. Dojde-li k chybě, vrátí None.
 		'''
 		assert self._alive
-		
-		if self.headFor_Boost.has_key(ent_type):
-			line = self.headFor_Boost[ent_type]
-			
-			if self.headCol_Boost[line].has_key(col_name):
-				result = self.headCol_Boost[line][col_name]
-			else:
+
+		if ent_subtype:
+			ent_subtype = [""] + ent_subtype.split(self.multivalue_delim)
+		else:
+			ent_subtype = [""]
+
+		colCnt = 0
+		resultCol = None
+		line = None
+		for st in ent_subtype:
+			line = self.headLine(ent_type, st)
+			if line == None:
 				return None
+
+			if col <= (colCnt + self.headColCnt_Boost[line]):
+				resultCol = col - colCnt
+				break
+			else:
+				colCnt += self.headColCnt_Boost[line]
+
+		if line and resultCol:
+			result = self.headAt(line, resultCol)
 		else:
 			result = None
 		return result
-	
+
+	def headCol(self, ent_type, ent_subtype, col_name):
+		'''
+		headCol("person", "", "DATE OF BIRTH")
+
+		Pro typ \a ent_type a podtyp \a ent_subtype vrátí číslo sloupce \a col_name.
+
+		@param ent_type
+			Název typu entity.
+		@param ent_subtype
+			Název podtypu entity. Může obsahovat i více podtypů oddělených self.multivalue_delim.
+		@param col_name
+			Název sloupce, jehož číslo chceme zjistit.
+		@return
+			Vrátí číslo sloupce \a col_name. Dojde-li k chybě, vrátí None.
+		'''
+		def headCol_(self, ent_type, ent_subtype, col_name):
+			line = self.headLine(ent_type, ent_subtype)
+			if line:
+				if self.headCol_Boost[line].has_key(col_name):
+					result = self.headCol_Boost[line][col_name]
+				else:
+					return None
+			else:
+				result = None
+			return result
+		#
+
+		# Jako první se bude sloupec hledat v daném typu a až poté v podtypu (nebo podtypech až to bude aktuální)
+		if ent_subtype:
+			ent_subtype = [""] + ent_subtype.split(self.multivalue_delim)
+		else:
+			ent_subtype = [""]
+
+		col = 0
+		colCnt = 0
+		line = None
+		for st in ent_subtype:
+			col = headCol_(self, ent_type, st, col_name)
+			if col:
+				col += colCnt
+				break
+			else:
+				line = self.headLine(ent_type, st)
+				if line == None:
+					return None # NOTE: Vyhodit chybovou hlášku? "None" znamená chybu, jinak OK.
+				colCnt += self.headColCnt_Boost[line]
+
+		return col
+
 	def headType(self, line):
 		assert self._alive
-		
-		if self.headFor_Boost_reverse.has_key(line):
-			return self.headFor_Boost_reverse[line]
+
+		if self.headType_Boost.has_key(line):
+			return self.headType_Boost[line][0]
 		else:
 			return None
-	
+
+	def headSubtype(self, line):
+		if self.headType_Boost.has_key(line):
+			return self.headType_Boost[line][1]
+		else:
+			return None
+
 	def dataAt(self, line, col):
 		assert self._alive
 		return c_char_p( KBSharedMemDataAt( self.KB_shm_p, line, col ) ).value
-	
+
 	def dataFor(self, line, col_name):
 		'''
 		dataFor(10000, "DATE OF BIRTH")
 		'''
 		assert self._alive
-		
+
 		ent_type = self.dataType(line)
 		if ent_type == None:
 			return None
-		
-		col = self.headCol(ent_type, col_name)
+
+		ent_subtype = self.dataSubtype(line)
+		if ent_subtype == None:
+			return None
+
+		col = self.headCol(ent_type, ent_subtype, col_name)
 		if col == None:
 			return None
-		
+
 		return self.dataAt(line, col)
-	
+
 	def dataType(self, line):
 		assert self._alive
-		return self.dataAt(line, 1)
-	
+		return self.dataAt(line, 2)
+
+	def dataSubtype(self, line):
+		assert self._alive
+		col = self.headCol(self.dataType(line), "", "SUBTYPE")
+		if isinstance(col, int):
+			return self.dataAt(line, col)
+		else:
+			return ""
+
 	@staticmethod
 	def getVersionFromSrc(kb_path):
 		assert isinstance(kb_path, str)
-		
+
 		kb_path = c_char_p(kb_path)
-		
+
 		status = c_int(0)
 		status = c_int( getVersionFromSrc(kb_path) )
 		if status.value < 0:
 			raise KbShmException("getVersionFromSrc: %s" % status.value)
 		else:
 			return status.value
-	
+
 	@staticmethod
 	def getVersionFromBin(kb_bin_path):
 		assert isinstance(kb_bin_path, str)
-		
+
 		kb_bin_path = c_char_p(kb_bin_path)
-		
+
 		status = c_int(0)
 		status = c_int( getVersionFromBin(kb_bin_path) )
 		if status.value < 0:
