@@ -53,7 +53,7 @@ def print_dbg(text=""):
 	
 	print(head + ":\n'''\n" + text + "\n'''")
 
-def getDictHeadKB():
+def getDictHeadKB(path_to_headkb=PATH_HEAD_KB):
 	""" Returns a dictionary with the structure of KB from HEAD-KB. """
 
 	lines = []
@@ -93,12 +93,17 @@ class KnowledgeBase:
 			wiki_stats_column[ent_type] = headKB[ent_type]["WIKI BACKLINKS"]
 	#wiki_stats_column = dict([(ent_type, headKB[ent_type]["WIKI BACKLINKS"]) for ent_type in headKB.keys()])
 	
-	def __init__(self, filename):
+	def __init__(self, path_to_headkb=PATH_HEAD_KB, path_to_kb=None):
 		"""
 		Reads knowledge base from a file using ctypes library
 		kb_loader.so, prepares a dictionary of peoples names
 		for coreference detection.
 		"""
+		self.path_to_headkb = path_to_headkb
+		self.headKB = getDictHeadKB(self.path_to_headkb)
+		
+		self._kb_loaded = False
+		self.lines = []
 		
 		# lists of metrics values in kb for computing percentiles
 		self.metrics = {'person':{'description_length':[], 'columns_number':[], 'wiki_backlinks':[], 'wiki_hits':[], 'wiki_ps':[]},
@@ -141,34 +146,102 @@ class KnowledgeBase:
 					'geo:waterfall':{'description_length':{}, 'columns_number':{}, 'wiki_backlinks':{}, 'wiki_hits':{}, 'wiki_ps':{}}
 					}
 
-		self.filename = filename
-
+		self.path_to_kb = path_to_kb
+	
+	def __repr__(self):
+		return "KnowledgeBase(path_to_headkb=%r, path_to_kb=%r, kb_is_loaded=%r)" % (self.path_to_headkb, self.path_to_kb, self._kb_loaded)
+	
+	def check_or_load_kb(self):
+		if not self._kb_loaded:
+			self.load_kb()
+	
+	def load_kb(self):
+		# loading knowledge base
+		self.lines = []
+		with open(self.path_to_kb) as kb_file:
+			for line in kb_file:
+				self.lines.append(line[:-1].split("\t"))
+		self._kb_loaded = True
+	
+	def get_ent_head(self, line):
+		ent_type = self.get_ent_type(line)
+		ent_subtype = self.get_ent_subtype(line)
+		
+		if ent_subtype:
+			ent_subtypes = [""] + ent_subtype.split(KB_MULTIVALUE_DELIM)
+		else:
+			ent_subtypes = [""]
+		
+		head = []
+		for subtype in ent_subtypes:
+			head.extend([item[0] for item in sorted(self.headKB[ent_type][subtype].items(), key=lambda i: i[-1])])
+		
+		return head
+	
 	def get_ent_type(self, line):
 		""" Returns a type of an entity at the line of the knowledge base. """
-
-		ent_type = self.get_field(line, 0)
+		
+		ent_type = self.get_field(line, 1)
 		return ent_type
+	
+	def get_ent_subtype(self, line):
+		""" Returns a subtype of an entity at the line of the knowledge base. """
+		
+		ent_type = self.get_ent_type(line)
+		if self.headKB[ent_type][""].has_key("SUBTYPE"):
+			ent_subtype = self.get_field(line, self.headKB[ent_type][""]["SUBTYPE"])
+		else:
+			ent_subtype = ""
+		return ent_subtype
 	
 	def get_location_code(self, line):
 		return self.get_data_for(line, "FEATURE CODE")[0:3]
 
 	def get_field(self, line, column):
 		""" Returns a column of a line in the knowledge base. """
-
-		# KB lines are indexed from one
-		try:
-			return self.lines[int(line) - 1][column]
-		except:
-
-			sys.stderr.write("line " + str(line) + " column " + str(column) + "\n")
-			exit()
+		
+		if isinstance(line, list): # line jako sloupce dané entity
+			return line[column]
+		else: # line jako číslo řádku na kterém je daná entita
+			self.check_or_load_kb()
+			
+			# KB lines are indexed from one
+			try:
+				return self.lines[int(line) - 1][column]
+			except:
+				sys.stderr.write("line " + str(line) + " column " + str(column) + "\n")
+				raise
 	
-	def get_data_for(self, line, col_name):
+	def get_col_for(self, line, col_name):
 		""" Line numbering from one. """
 
 		# getting the entity type
 		ent_type = self.get_ent_type(line)
-		return self.get_field(line, KnowledgeBase.headKB[ent_type][col_name])
+		ent_subtype = self.get_ent_subtype(line)
+		
+		if ent_subtype:
+			ent_subtypes = [""] + ent_subtype.split(KB_MULTIVALUE_DELIM)
+		else:
+			ent_subtypes = [""]
+		
+		col = 0
+		colCnt = 0
+		for subtype in ent_subtypes:
+			if self.headKB[ent_type][subtype].has_key(col_name):
+				col = self.headKB[ent_type][subtype][col_name]
+				col += colCnt
+				break
+			else:
+				colCnt += len(self.headKB[ent_type][subtype])
+		else:
+			raise RuntimeError("Bad column name '%s' for line '%s'." % (col_name, line))
+		
+		return col
+	
+	def get_data_for(self, line, col_name):
+		""" Line numbering from one. """
+		
+		return self.get_field(line, self.get_col_for(line, col_name))
 	
 	def nonempty_columns(self, line):
 		""" Returns a number of columns at the specified line of the knowledge base which have a non-empty value. """
@@ -227,13 +300,7 @@ class KnowledgeBase:
 	def insert_metrics(self):
 		""" Computing SCORE WIKI, SCORE METRICS and CONFIDENCE and adding them to the KB. """
 
-		# loading knowledge base
-		self.lines = []
-		self.lines_added = []
-		with open(self.filename) as kb_file:
-			for line in kb_file:
-				self.lines.append(line[:-1].split("\t"))
-				self.lines_added.append(line[:-1].split("\t"))
+		self.check_or_load_kb()
 
 		# computing statistics		
 		for line_num in range(1, len(self.lines) + 1):
