@@ -49,8 +49,8 @@ cd `dirname "${LAUNCHED}"`
 
 mkdir -p ./figa/make_automat/morph/
 wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/VERSION -O VERSION
-wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/KB_cs.all -O KB_cs.all
-wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/HEAD-KB -O HEAD-KB
+wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/KB_cs+id.all -O KB_cs.all
+wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/HEAD-KB+id -O HEAD-KB
 wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/wiki_stats -O wiki_stats
 wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/morph/czech.lpn -O ./figa/make_automat/morph/czech.lpn
 wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/morph/czech_vc_prijmeni_navic.lpn -O ./figa/make_automat/morph/czech_vc_prijmeni_navic.lpn
@@ -62,7 +62,7 @@ wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_ma
 if $LOG; then
 	rm -f start.sh.fifo.stdout start.sh.fifo.stderr start.sh.fifo.stdmix
 	mkfifo start.sh.fifo.stdout start.sh.fifo.stderr start.sh.fifo.stdmix
-	
+
 	cat start.sh.fifo.stdout | tee start.sh.stdout > start.sh.fifo.stdmix &
 	cat start.sh.fifo.stderr | tee start.sh.stderr > start.sh.fifo.stdmix &
 	cat start.sh.fifo.stdmix > start.sh.stdmix &
