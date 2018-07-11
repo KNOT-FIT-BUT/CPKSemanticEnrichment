@@ -57,7 +57,6 @@ MENTIONS_TYPE = {
     'geoplace:protectedArea' : {},
     'geoplace:conservationArea' : {},
     'geoplace:mountain' : {},
-    'geoplace:mountain' : {},
     'geoplace:castle' : {},
     'geoplace:lake' : {},
     'geoplace:forest' : {},
@@ -1119,7 +1118,7 @@ class Context(object):
         mentioned_in_par_score = self.mentioned_in_par(area_name, 'geo:waterfall')
 
         places = []
-        locations = self.kb.get_data_for(candidate, "OBECK")
+        locations = self.kb.get_data_for(candidate, "OBEC")
         if locations:
             places.extend(locations.split('|'))
         locations = self.kb.get_data_for(candidate, "OKRES")
@@ -1416,18 +1415,18 @@ def get_entities_from_figa(kb, input_string, input_string_in_unicode, lowercase,
 
     # getting data from figa
     if lowercase:
-    	output = seek_names.lookup_string(input_string.lower())
+        output = seek_names.lookup_string(input_string.lower())
     else:
-    	output = seek_names.lookup_string(input_string)
+        output = seek_names.lookup_string(input_string)
     entities = []
 
     # processing figa output and creating Entity objects
     #print(output)
     for line in output.split("\n")[:-1]:
         entity_attributes = line.split('\t')
-    	e = Entity(entity_attributes, kb, input_string, input_string_in_unicode, register)
-    	global_senses.update(e.senses)
-    	entities.append(e)
+        e = Entity(entity_attributes, kb, input_string, input_string_in_unicode, register)
+        global_senses.update(e.senses)
+        entities.append(e)
     
     return entities
 
