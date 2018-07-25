@@ -14,6 +14,7 @@ import argparse
 import figa.make_automat.natToKB as natToKB
 import figa.sources.marker as figa
 import ner_knowledge_base
+from ner_knowledge_base import KB_MULTIVALUE_DELIM
 import os
 import unicodedata
 import uuid
@@ -281,7 +282,7 @@ class Entity(object):
                 if(self.kb.get_ent_type(s) in ["person", "person:artist"]):
                     proffesions = self.kb.get_data_for(s, "POVOLANI")
                     if(proffesions):
-                        proffesions = proffesions.split('|')
+                        proffesions = proffesions.split(KB_MULTIVALUE_DELIM)
                         proffesions = [p for p in proffesions if sentence.find(" " + p + " ", verb_index) != -1]
                         if(proffesions):
                             break
@@ -290,7 +291,7 @@ class Entity(object):
                 new_senses = []
                 for s in self.senses:
                     if self.kb.get_ent_type(s) in ["person", "person:artist"]:
-                        for proffesion in self.kb.get_data_for(s, "POVOLANI").split('|'):
+                        for proffesion in self.kb.get_data_for(s, "POVOLANI").split(KB_MULTIVALUE_DELIM):
                             if(proffesion in proffesions):
                                 new_senses.append(s)
                                 break
@@ -717,7 +718,7 @@ class Context(object):
                             if ent_type in ["person", "person:artist"]:
                                 professions = ent.kb.get_data_for(c, "POVOLANI")
                                 if(professions):
-                                    professions = professions.split('|')
+                                    professions = professions.split(KB_MULTIVALUE_DELIM)
                                     [self.people_professions[par].append(p) for p in professions if par_text.find(p) != -1 and p not in self.people_professions[par]]
 
                 elif isinstance(ent, dates.Date):
@@ -830,7 +831,7 @@ class Context(object):
         # computing people_profession_score
         people_profession_score = 0
 
-        person_professions = self.kb.get_data_for(candidate, "POVOLANI").split('|')
+        person_professions = self.kb.get_data_for(candidate, "POVOLANI").split(KB_MULTIVALUE_DELIM)
         for prof in person_professions:
             if prof in self.people_professions[par_index]:
                 people_profession_score += 1
@@ -923,7 +924,7 @@ class Context(object):
         place_score = 0
         places = self.kb.get_data_for(candidate, "LOKALITA")
         if(places):
-            places = places.split('|')
+            places = places.split(KB_MULTIVALUE_DELIM)
             place_score = self.mentioned_in_par(places, 'geoplace:populatedPlace')
             
         #    print(places)
@@ -952,7 +953,7 @@ class Context(object):
         places = [self.kb.get_data_for(candidate, "OKRES")]
         locations = self.kb.get_data_for(candidate, "UMISTENI")
         if locations:
-            places.extend(locations.split('|'))
+            places.extend(locations.split(KB_MULTIVALUE_DELIM))
         place_score = self.mentioned_in_par(places, 'geoplace:populatedPlace')
 
        #if places:
@@ -979,7 +980,7 @@ class Context(object):
         places = [self.kb.get_data_for(candidate, "SVETADIL")]
         locations = self.kb.get_data_for(candidate, "STAT")
         if locations:
-            places.extend(locations.split('|'))
+            places.extend(locations.split(KB_MULTIVALUE_DELIM))
         place_score = self.mentioned_in_par(places, 'geoplace:populatedPlace')
 
         #if places:
@@ -1031,13 +1032,13 @@ class Context(object):
         places = []
         locations = self.kb.get_data_for(candidate, "OBEC")
         if locations:
-            places.extend(locations.split('|'))
+            places.extend(locations.split(KB_MULTIVALUE_DELIM))
         locations = self.kb.get_data_for(candidate, "OKRES")
         if locations:
-            places.extend(locations.split('|'))
+            places.extend(locations.split(KB_MULTIVALUE_DELIM))
         locations = self.kb.get_data_for(candidate, "STAT")
         if locations:
-            places.extend(locations.split('|')) 
+            places.extend(locations.split(KB_MULTIVALUE_DELIM)) 
         place_score = self.mentioned_in_par(places, 'geoplace:populatedPlace')
 
         #if places:
@@ -1060,10 +1061,10 @@ class Context(object):
         places = []
         locations = self.kb.get_data_for(candidate, "OBEC")
         if locations:
-            places.extend(locations.split('|'))
+            places.extend(locations.split(KB_MULTIVALUE_DELIM))
         locations = self.kb.get_data_for(candidate, "OKRES")
         if locations:
-            places.extend(locations.split('|'))
+            places.extend(locations.split(KB_MULTIVALUE_DELIM))
         place_score = self.mentioned_in_par(places, 'geoplace:populatedPlace')
 
         result = (mentioned_in_par_score + place_score) / 2
@@ -1076,10 +1077,10 @@ class Context(object):
         places = []
         locations = self.kb.get_data_for(candidate, "1_STAT")
         if locations:
-            places.extend(locations.split('|'))
+            places.extend(locations.split(KB_MULTIVALUE_DELIM))
         locations = self.kb.get_data_for(candidate, "2_STAT")
         if locations:
-            places.extend(locations.split('|'))
+            places.extend(locations.split(KB_MULTIVALUE_DELIM))
         place_score = self.mentioned_in_par(places, 'geoplace:populatedPlace')
 
         result = (mentioned_in_par_score + place_score) / 2
@@ -1110,13 +1111,13 @@ class Context(object):
         places = []
         locations = self.kb.get_data_for(candidate, "KRAJ")
         if locations:
-            places.extend(locations.split('|'))
+            places.extend(locations.split(KB_MULTIVALUE_DELIM))
         locations = self.kb.get_data_for(candidate, "OKRES")
         if locations:
-            places.extend(locations.split('|'))
+            places.extend(locations.split(KB_MULTIVALUE_DELIM))
         locations = self.kb.get_data_for(candidate, "STAT")
         if locations:
-            places.extend(locations.split('|'))
+            places.extend(locations.split(KB_MULTIVALUE_DELIM))
         place_score = self.mentioned_in_par(places, 'geoplace:populatedPlace')
 
         result = (mentioned_in_par_score + place_score) / 2
@@ -1129,16 +1130,16 @@ class Context(object):
         places = []
         locations = self.kb.get_data_for(candidate, "OBEC")
         if locations:
-            places.extend(locations.split('|'))
+            places.extend(locations.split(KB_MULTIVALUE_DELIM))
         locations = self.kb.get_data_for(candidate, "OKRES")
         if locations:
-            places.extend(locations.split('|'))
+            places.extend(locations.split(KB_MULTIVALUE_DELIM))
         locations = self.kb.get_data_for(candidate, "KRAJ")
         if locations:
-            places.extend(locations.split('|'))
+            places.extend(locations.split(KB_MULTIVALUE_DELIM))
         locations = self.kb.get_data_for(candidate, "STAT")
         if locations:
-            places.extend(locations.split('|'))
+            places.extend(locations.split(KB_MULTIVALUE_DELIM))
         place_score = self.mentioned_in_par(places, 'geoplace:populatedPlace')
 
         result = (mentioned_in_par_score + place_score) / 2
