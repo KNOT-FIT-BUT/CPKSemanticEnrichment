@@ -13,7 +13,7 @@ KB_shm_fd = c_int(-1)
 status = c_int(0)
 
 # Připojení KB
-KB_shm_fd = c_int( connectKB_shm() )
+KB_shm_fd = c_int( connectKB_shm("SharedKB-speedtest") )
 if KB_shm_fd.value < 0:
 	sys.stderr.write("ERROR: connectKB_shm()")
 	exit(1)
@@ -46,6 +46,7 @@ if status.value != 0:
 
 KB_shm_p = c_void_p(0)
 KB_shm_fd = c_int(-1)
+print("lines:", i)
 exit(0)
 
 # konec souboru benchmark.py

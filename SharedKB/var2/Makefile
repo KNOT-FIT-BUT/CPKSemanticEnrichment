@@ -51,9 +51,10 @@ pack_nocz:
 test: $(program)
 	./$(program) $(ARG1)
 
+# make speedtest ARG1=../../KB-HEAD.all 2>&1 | sed -rn 's/^real.*m(.*)s.*/\1/p'
 speedtest:
 	make -B "LDB=-DSPEEDTEST"
-	bash -c "time ./$(program) $(ARG1)"
+	bash -c "time ./$(program) -s SharedKB-speedtest $(ARG1)"
 
 valgrind:
 	make debug
@@ -77,8 +78,11 @@ libKB_shm.so: libKB_shm.c libKB_shm.h global.c global.h
 reader_kdbg:
 	mkdir -p '/tmp/Decipher'; cp * '/tmp/Decipher'; cd '/tmp/Decipher'; make reader -B "LDB=-g3 -DDEBUG"; kdbg ./reader
 
-reader: libKB_shm.c libKB_shm.h reader.c
-	$(CC) $(CFLAGS) libKB_shm.c reader.c -o reader $(LINK)
+reader: libKB_shm.c libKB_shm.h global.c global.h reader.c
+	$(CC) $(CFLAGS) reader.c libKB_shm.c global.c -o reader $(LINK)
+
+reader_lib: lib reader.c
+	$(CC) $(CFLAGS) reader.c -o reader -L. -lKB_shm $(LINK)
 
 # Kompilace démonu
 $(program): $(OBJ)

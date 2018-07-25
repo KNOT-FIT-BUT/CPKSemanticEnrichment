@@ -9,11 +9,12 @@
 
 int main()
 {
+	char *KB_shm_name = "/decipherKB-daemon_shm";
 	KBSharedMem *KB_shm_p = NULL;
 	int KB_shm_fd = -1;
 	int status = 0;
 	
-	status = connectKBSharedMem( &KB_shm_p, &KB_shm_fd );
+	status = connectKBSharedMem( &KB_shm_p, &KB_shm_fd, KB_shm_name );
 	if (status != 0)
 	{
 		puts("ERROR");
@@ -23,7 +24,7 @@ int main()
 	printf("%lx: hit enter...", (size_t)KB_shm_p);
 	while(getchar() != '\n');
 	
-	char *str = KBSharedMemHeadAt(KB_shm_p, 0, 0);
+	char *str = KBSharedMemDataAt(KB_shm_p, -1, -1);
 	if (str != NULL)
 		puts(str);
 	else
