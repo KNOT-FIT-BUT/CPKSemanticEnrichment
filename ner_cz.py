@@ -1444,8 +1444,13 @@ def get_entities_from_figa(kb, input_string, input_string_in_unicode, lowercase,
         lower = ""
         if lowercase:
             lower = "-lower"
-
-        seek_names.load_dict(os.path.dirname(os.path.realpath(__file__)) + "/figa/automata" + lower + ".dct") # TODO: Dynamicky "dct" nebo "ct".
+        
+        path_to_figa_dict = os.path.dirname(os.path.realpath(__file__)) + "/figa/automata" + lower
+        if os.path.isfile(path_to_figa_dict + ".dct"):
+            path_to_figa_dict += ".dct" # DARTS
+        else:
+            path_to_figa_dict += ".ct" # CEDAR
+        seek_names.load_dict(path_to_figa_dict)
 
     # getting data from figa
     if lowercase:
