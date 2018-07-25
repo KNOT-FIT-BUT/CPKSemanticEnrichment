@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# vim: set tabstop=4 softtabstop=4 expandtab shiftwidth=4
 
 # Author: Matej Magdolen, xmagdo00@stud.fit.vutbr.cz
 # Author: Jan Cerny, xcerny62@stud.fit.vutbr.cz
@@ -83,11 +84,20 @@ def unicodedata_name(c):
         return ""
 
 # same as in ner.py
-def remove_accent(_string):
-    """ Removes accents from a string. For example, Eduard Ovčáček -> Eduard Ovcacek. """
-    # BUG: Toto nemůže fungovat je-li isinstance(_string, str), protože odstranením diakritiky se jistě změní délka u typu str!
+def remove_accent_str(input_string):
+    """ Removes accent from the string, e.g. "José Francisco" -> "Jose Francisco". """
+    assert isinstance(input_string, basestring)
     
-    nfkd_form = unicodedata.normalize('NFKD', unicode(_string))
+    nfkd_form = unicodedata.normalize('NFKD', unicode(input_string))
+    return str("".join([c for c in nfkd_form if not unicodedata.combining(c)]))
+
+# same as in ner.py
+def remove_accent_unicode(_string):
+    """ Removes accents from a string. For example, "Eduard Ovčáček" -> "Eduard Ovcacek". """
+    assert isinstance(_string, basestring)
+    _string = unicode(_string)
+    
+    nfkd_form = unicodedata.normalize('NFKD', _string)
     result = str("".join([c for c in nfkd_form if not ACCENT_REGEX.search(unicodedata_name(c))]))
     result = result.decode("utf8", "replace")
     if len(_string) == len(result):
@@ -153,7 +163,7 @@ class Entity(object):
         input_string_in_unicode - input string in Unicode
         register - entity register
         """
-        assert isinstance(entity_attributes, list)
+        assert isinstance(entity_attributes, FigaOutput)
         assert isinstance(kb, ner_knowledge_base.KnowledgeBaseCZ)
         assert isinstance(input_string, str)
         assert isinstance(input_string_in_unicode, unicode)
@@ -184,16 +194,15 @@ class Entity(object):
         self.register = register
 
         # getting possible senses (sense 0 marks a coreference)
-        self.senses = set([int(s) for s in entity_attributes[0].split(';') if s != '0'])
+        self.senses = set([s for s in entity_attributes.kb_rows if s != 0])
         
         # Ofsety jsou vztaženy k unicode.
-        # start offset is indexed differently from figa
-        self.start_offset = int(entity_attributes[1]) - 1
-        self.end_offset = int(entity_attributes[2])
+        self.start_offset = entity_attributes.start_offset
+        self.end_offset = entity_attributes.end_offset
         self.begin_of_paragraph = None
 
         # the source text of the entity
-        self.source = ncr2unicode(entity_attributes[3])
+        self.source = ncr2unicode(entity_attributes.fragment)
 
         if len(self.senses) == 0:
             global nationalities_forms
@@ -201,7 +210,7 @@ class Entity(object):
                 self.is_nationality = True
 
         # possible coreferences - people whose names are supersets of an entity
-        self.partial_match_senses = self.kb.people_named(remove_accent(self.source).lower())
+        self.partial_match_senses = self.kb.people_named(remove_accent_unicode(self.source).lower())
 
     @classmethod
     def from_data_row(cls, kb, dr, input_string, input_string_in_unicode, register):
@@ -1353,7 +1362,7 @@ def resolve_coreferences(entities, context, print_all, register):
                         candidates += list(register.id2entity[sense])
                     
                     # each candidate has to contain the text of a given entity
-                    candidates = (c for c in candidates if remove_accent(e.source).lower() in remove_accent(c.source).lower())
+                    candidates = (c for c in candidates if remove_accent_unicode(e.source).lower() in remove_accent_unicode(c.source).lower())
                     # choosing the nearest predecessor candidate for a coreference
                     entity = get_nearest_predecessor(e, candidates)
                     if entity:
@@ -1389,6 +1398,31 @@ def get_nearest_entity(_entity, _candidates):
     
     return candidates[0].preferred_sense
 
+FigaOutput = collections.namedtuple("FigaOutput", "kb_rows start_offset end_offset fragment flag")
+
+def parseFigaOutput(figa_output):
+    """
+    Parsuje výstup z figy.
+    
+    Syntax výstupního formátu v Backusově-Naurově formě (BNF):
+        <výstup Figa> :== <řádek výstupu>
+            | <řádek výstupu> <výstup Figa>
+        <řádek výstupu> :== <čísla řádků do KB> "\t" <počáteční offset>
+                "\t" <koncový offset> "\t" <fragment> "\t" <příznak> "\n"
+        <čísla řádků do KB> :== <číslo>
+            | <číslo> ";" <čísla řádků do KB>
+    kde:
+        <čísla řádků do KB> odkazují na řádky ve znalostní bázi s entitami, jenž mají mezi atributy <fragment> (řádek 0 značí zájmeno – coreference)
+        <počáteční offset> a <koncový offset> jsou pozice prvního a posledního znaku řetězce <fragment> (na pozici 1 leží první znak vstupního textu) – to je třeba upravit, aby šlo využít přímo input[start_offset:end_offset]
+        <příznak> může nabývat dvou hodnot: F – fragment plně odpovídá atributu odkazovaných entit; S – byl tolerován překlep ve fragmentu
+    """
+    
+    # Formát "číslo_řádku[;číslo_řádku]\tpočáteční_offset\tkoncový_offset\tnázev_entity\tF"
+    for line in figa_output.split("\n"):
+        if line != "":
+            kb_rows, start_offset, end_offset, name, flag = line.split("\t")
+            yield FigaOutput(map(int, kb_rows.split(";")), int(start_offset)-1, int(end_offset), name, flag) # Figa má start_offset+1 (end_offset má dobře).
+
 seek_names = None
 output = None
 
@@ -1400,7 +1434,7 @@ def get_entities_from_figa(kb, input_string, input_string_in_unicode, lowercase,
     assert isinstance(lowercase, bool)
     assert isinstance(global_senses, set)
     assert isinstance(register, EntityRegister)
-
+    
     global seek_names
     global output
 
@@ -1411,23 +1445,22 @@ def get_entities_from_figa(kb, input_string, input_string_in_unicode, lowercase,
         if lowercase:
             lower = "-lower"
 
-        seek_names.load_dict(os.path.dirname(os.path.realpath(__file__)) + "/figa/automata" + lower + ".ct")
+        seek_names.load_dict(os.path.dirname(os.path.realpath(__file__)) + "/figa/automata" + lower + ".dct") # TODO: Dynamicky "dct" nebo "ct".
 
     # getting data from figa
     if lowercase:
         output = seek_names.lookup_string(input_string.lower())
     else:
         output = seek_names.lookup_string(input_string)
+
     entities = []
 
     # processing figa output and creating Entity objects
-    #print(output)
-    for line in output.split("\n")[:-1]:
-        entity_attributes = line.split('\t')
-        e = Entity(entity_attributes, kb, input_string, input_string_in_unicode, register)
+    for line in parseFigaOutput(output):
+        e = Entity(line, kb, input_string, input_string_in_unicode, register)
         global_senses.update(e.senses)
         entities.append(e)
-    
+
     return entities
 
 def remove_shorter_entities(entities):
@@ -1482,7 +1515,7 @@ def recognize(kb, input_string, print_all=False, print_result=True, print_score=
     input_string_in_unicode = input_string.decode("utf8", "replace")
     # running with parametr --remove_accent
     if remove:
-        input_string = remove_accent(input_string)
+        input_string = remove_accent_str(input_string)
 
     # creating entity register
     register = EntityRegister()
