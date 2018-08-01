@@ -6,14 +6,13 @@ import os, sys
 import re
 import imp
 import cPickle as pickle
-import threading
 import subprocess
 import unicodedata
 import tempfile
 import time
 
 # Pro debugování:
-from debug import print_dbg, print_dbg_en, cur_inspect
+from debug import print_dbg, print_dbg_en
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DIRPATH_KB_DAEMON = os.path.abspath(os.path.join(SCRIPT_DIR, "SharedKB/var2"))
@@ -47,7 +46,7 @@ class KnowledgeBaseCZ(object):
 
 		KB_shm = imp.load_source('KB_shm', os.path.join(DIRPATH_KB_DAEMON,"KB_shm.py"))
 		self.kb_shm_name = kb_shm_name
-		self.kb_shm = KB_shm.KB_shm(self.kb_shm_name)
+		self.kb_shm = KB_shm.KB_shm(self.kb_shm_name, KB_MULTIVALUE_DELIM)
 		self.kb_daemon = None
 
 	def start(self):
@@ -177,7 +176,7 @@ class KnowledgeBaseCZ(object):
 		forbidden = ["Pán", "Pani", "Svatý"]
 		#roles = ["Baron", "Prince", "Duke", "Earl", "King", "Pope", "Queen", "Artist", "Painter"]
 		regex_place = re.compile(r" (z|ze) .*")
-		regex_role = re.compile(r"[Tt]he [a-zA-Z]+")
+		#regex_role = re.compile(r"[Tt]he [a-zA-Z]+")
 		regex_van = re.compile(r"[Vv]an [a-zA-Z]+")
 		regex_name = re.compile(r"[A-Z][a-z-']+[a-zA-Z]*[a-z]+") # this should match only a nice name
 		names = set()
@@ -189,12 +188,12 @@ class KnowledgeBaseCZ(object):
 		#	preferred_role = self.get_data_for(line, "PREFERRED ROLE")
 		#	if preferred_role and " " not in preferred_role:
 		#		roles.add(preferred_role)
-		#	other_roles = self.get_data_for(line, "OTHER ROLE").split("|")
+		#	other_roles = self.get_data_for(line, "OTHER ROLE").split(KB_MULTIVALUE_DELIM)
 		#	for other_role in other_roles:
 		#		if other_role and " " not in other_role:
 		#			roles.add(other_role)
 #		if ent_type == "person":
-#			professions = self.get_data_for(line, "POVOLANI").split("|")
+#			professions = self.get_data_for(line, "POVOLANI").split(KB_MULTIVALUE_DELIM)
 #			for profession in professions:
 #				if profession:
 #					roles.add(profession)

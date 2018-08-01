@@ -24,7 +24,8 @@ import name_recognizer.data_row as module_data_row
 import name_recognizer.name_recognizer as name_recognizer
 
 # Pro debugování:
-import difflib, linecache, inspect
+#import debug
+#import difflib, linecache, inspect
 
 import logging
 module_logger = logging.getLogger("ner")
@@ -342,7 +343,7 @@ class Entity(object):
                 context_score = context.country_percentile(self.kb.get_data_for(i, "LOKACE"))
             elif ent_type in ["person", "person:artist"]:
                 context_score = context.person_percentile(i)
-            elif ent_type == 'organisation' or ent_type == 'event':
+            elif ent_type in ['organisation', 'event']:
                 context_score = context.organisation_percentile(i, ent_type)
             elif ent_type == 'geoplace:protectedArea':
                 context_score = context.prot_area_percentile(i)
@@ -607,7 +608,7 @@ class Context(object):
 
         # computing statistics for each paragraph
         for par in self.paragraphs:
-            self.mentions[par] = MENTIONS_TYPE
+            self.mentions[par] = MENTIONS_TYPE # FIXME: Jestli se nemýlím, tak toto je chyba. IHMO by tady mělo být deepcopy(MENTIONS_TYPE)
             self.countries[par] = {}
             self.people_nationalities[par] = []
             self.people_dates[par] = []
@@ -698,7 +699,7 @@ class Context(object):
 
                         # if entity is person update number of her mentions in dictionary
                         else:
-                            if ent_type == "person:artist":
+                            if ent_type == "person:artist": # FIXME: Toto může vést k chybě.
                                 ent_type = "person"
 
                             name_tag = "JMENO"
@@ -859,7 +860,7 @@ class Context(object):
         """ Returns a percentile of a number of location belonging to a country identified by code. """
         assert isinstance(country, str)
 
-        country_score = self.mentioned_in_par(country, 'geoplace:populatedPlace')
+        #country_score = self.mentioned_in_par(country, 'geoplace:populatedPlace')
         #if country in self.mentions[par_index]["geoplace:populated_place"]:
         #   country_score = self.mentions[par_index]["geoplace:populated_place"][country]
 
@@ -1505,15 +1506,15 @@ def recognize(kb, input_string, print_all=False, print_result=True, print_score=
     assert isinstance(split_interval, bool)
     assert isinstance(find_names, bool)
     
-    def debugChangesInEntities(entities, responsible_line):
-        if debug.DEBUG_EN:
-            global debug_last_status_of_entities
-            if "debug_last_status_of_entities" in globals():
-                new_status_of_entities = [e+"\n" for e in map(str, sorted(entities, key=lambda ent: ent.start_offset))]
-                print_dbg_en(responsible_line, "".join(difflib.unified_diff(debug_last_status_of_entities, new_status_of_entities, fromfile='before', tofile='after', n=0))[:-1], delim="\n", stack_num=2)
-                debug_last_status_of_entities = new_status_of_entities
-            else:
-                debug_last_status_of_entities = [e+"\n" for e in map(str, sorted(entities, key=lambda ent: ent.start_offset))]
+#    def debugChangesInEntities(entities, responsible_line):
+#        if debug.DEBUG_EN:
+#            global debug_last_status_of_entities
+#            if "debug_last_status_of_entities" in globals():
+#                new_status_of_entities = [e+"\n" for e in map(str, sorted(entities, key=lambda ent: ent.start_offset))]
+#                print_dbg_en(responsible_line, "".join(difflib.unified_diff(debug_last_status_of_entities, new_status_of_entities, fromfile='before', tofile='after', n=0))[:-1], delim="\n", stack_num=2)
+#                debug_last_status_of_entities = new_status_of_entities
+#            else:
+#                debug_last_status_of_entities = [e+"\n" for e in map(str, sorted(entities, key=lambda ent: ent.start_offset))]
     
     # replacing non-printable characters and semicolon with space characters
     input_string = re.sub("[;\x01-\x08\x0e-\x1f\x0c\x7f]", " ", input_string)
@@ -1583,7 +1584,7 @@ def recognize(kb, input_string, print_all=False, print_result=True, print_score=
     fix_poor_disambiguation(entities, context)
     #debugChangesInEntities(entities, linecache.getline(__file__, inspect.getlineno(inspect.currentframe())-1))
 
-    name_coreferences = [e for e in entities if e.source.lower() not in PRONOUNS]
+    #name_coreferences = [e for e in entities if e.source.lower() not in PRONOUNS]
     #resolve_coreferences(name_coreferences, context, print_all, register) # Zde se ověřuje, zda-li části jmen jsou odkazy nebo samostatné entity.
     resolve_coreferences(entities, context, print_all, register)
 

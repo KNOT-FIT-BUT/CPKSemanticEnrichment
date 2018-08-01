@@ -21,7 +21,8 @@ from KB_shm import *
 
 import os
 import re
-from ctypes import CDLL, c_char, c_char_p, c_int, c_uint, c_void_p, POINTER, byref
+from ctypes import CDLL, c_char, c_char_p, c_int, c_uint, c_void_p, POINTER
+#from ctypes import byref
 
 # Pro debugování:
 import inspect
@@ -233,7 +234,7 @@ class KB_shm(object):
 	'''
 	Třída zastřešující KB_shm.
 	'''
-	def __init__(self, kb_shm_name=None):
+	def __init__(self, kb_shm_name=None, multivalue_delim="|"):
 		'''
 		Inicializace.
 		'''
@@ -244,7 +245,7 @@ class KB_shm(object):
 		self.headCol_Boost = {} # Slovník LINE:{COLUMN_NAME:COLUMN}
 		self.headColCnt_Boost = {} # Slovník LINE:COLUMN_COUNT(Počet sloupců na daném řádku)
 		self.headType_Boost = {} # Slovník LINE:(TYPE,SUBTYPE)
-		self.multivalue_delim = "|"
+		self.multivalue_delim = multivalue_delim
 		
 		self.data_type_col = None # Sloupec ve kterém je definován typ entity
 		
@@ -285,7 +286,7 @@ class KB_shm(object):
 			if status.value != 0:
 				raise KbShmException("disconnectKB_shm")
 		
-		self.__init__(self.KB_shm_name.value)
+		self.__init__(self.KB_shm_name.value, self.multivalue_delim)
 	
 	def check(self, kb_shm_name=None):
 		'''
