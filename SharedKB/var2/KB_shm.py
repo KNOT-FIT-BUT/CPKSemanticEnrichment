@@ -313,7 +313,7 @@ class KB_shm(object):
 		# viz https://knot.fit.vutbr.cz/wiki/index.php/Decipher_ner#Sloupce_v_HEAD-KB
 		PARSER_FIRST = re.compile(r"""(?ux)
 			^
-			<(?P<TYPE>[^:>]+)(?:[:](?P<SUBTYPE>[^>]+))?>
+			<(?P<TYPE>[^>]+)> # NOTE: Potlačení podtypů
 			(?:\{(?P<FLAGS>(?:\w|[ ])*)(?:\[(?P<PREFIX_OF_VALUE>[^\]]+)\])?\})?
 			(?P<NAME>(?:\w|[ ])+)
 			$
@@ -330,7 +330,7 @@ class KB_shm(object):
 		while text != None:
 			splitted = PARSER_FIRST.search(text)
 			head_type = splitted.group("TYPE")
-			head_subtype = splitted.group("SUBTYPE")
+			head_subtype = None # NOTE: Potlačení podtypů
 			if not self.headLine_Boost.has_key(head_type):
 				self.headLine_Boost[head_type] = {}
 			
