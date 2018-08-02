@@ -23,34 +23,26 @@ import metrics_knowledge_base
 with open("wiki_stats") as wiki_stats:
     stats = dict()
     for line in wiki_stats:
-        items = line[:-1].split("\t")
+        items = line.rstrip("\n").split("\t")
         url = "http://cs.wikipedia.org/wiki/" + items[0]
         stats[url] = items[1:]
 
 found = 0
 not_found = 0
 
-with open("KB_cs.all") as kb:
-    for line in kb:
-        split_line = line[:-1].split("\t")
-        ent_type = split_line[0]
-        
-        if ent_type in metrics_knowledge_base.KnowledgeBase.wiki_link_column:
-            index = metrics_knowledge_base.KnowledgeBase.wiki_link_column[ent_type]
-        else:
-            sys.stdout.write(line.strip('\n') + "\t\t\t\n")
-            continue
+kb_struct = metrics_knowledge_base.KnowledgeBase()
 
-        if index >= len(split_line):
-            sys.stderr.write("ERROR: There is no column " + str(index + 1) + " in row " + line + ".\n")
-            exit(99)
-
-        link = split_line[index]
-        
-        if link in stats:
-            sys.stdout.write(line.strip('\n') + '\t' + stats[link][0] + '\t' + stats[link][1] + '\t' + stats[link][2] + '\n')
-            found += 1
-        else:
-            sys.stdout.write(line.strip('\n') + "\t\t\t\n")
-            if link:
-                not_found += 1
+for line in sys.stdin:
+    columns = line.rstrip("\n").split("\t")
+    
+    link = kb_struct.get_data_for(columns, "WIKI_URL")
+    if link and link in stats:
+        columns[kb_struct.get_col_for(columns, "WIKI BACKLINKS")] = stats[link][0]
+        columns[kb_struct.get_col_for(columns, "WIKI HITS")] = stats[link][1]
+        columns[kb_struct.get_col_for(columns, "WIKI PRIMARY SENSE")] = stats[link][2]
+        sys.stdout.write("\t".join(columns) + "\n")
+        found += 1
+    else:
+        sys.stdout.write(line)
+        if link:
+            not_found += 1

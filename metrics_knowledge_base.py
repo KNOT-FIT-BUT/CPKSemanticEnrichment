@@ -171,7 +171,7 @@ class KnowledgeBase:
 		self.lines = []
 		with open(self.path_to_kb) as kb_file:
 			for line in kb_file:
-				self.lines.append(line[:-1].split("\t"))
+				self.lines.append(line.rstrip("\n").split("\t"))
 		self._kb_loaded = True
 	
 	def get_ent_head(self, line):
