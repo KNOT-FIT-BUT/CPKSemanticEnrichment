@@ -25,6 +25,6 @@ parser.add_argument('-k', '--knowledge-base', help='File containing the knowledg
 
 arguments = parser.parse_args()
 
-kb = metrics_knowledge_base.KnowledgeBase(arguments.knowledge_base)
+kb = metrics_knowledge_base.KnowledgeBase(path_to_kb=arguments.knowledge_base)
 kb.insert_metrics()
 print kb
