@@ -89,6 +89,8 @@ def getDictHeadKB(path_to_headkb=PATH_HEAD_KB):
 			else:
 				splitted = PARSER_OTHER.search(plain_column)
 			col_name = splitted.group("NAME")
+			if col_name in headKB[head_type][head_subtype]:
+				raise RuntimeError("getDictHeadKB: column %s at %s was already at %s" % (col_name, col_num, headKB[head_type][head_subtype][col_name]))
 			headKB[head_type][head_subtype][col_name] = col_num
 			print_dbg(head_type, "/", head_subtype, " -> ", col_name, ": ", col_num, delim="")
 			
