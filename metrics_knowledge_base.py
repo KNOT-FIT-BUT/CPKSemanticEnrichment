@@ -78,7 +78,7 @@ def getDictHeadKB(path_to_headkb=PATH_HEAD_KB):
 				splitted = PARSER_FIRST.search(plain_column)
 				head_type = splitted.group("TYPE")
 				head_subtype = None # NOTE: Potlačení podtypů
-				if not headKB.has_key(head_type):
+				if head_type not in headKB:
 					headKB[head_type] = {}
 				
 				print_dbg(head_type, "/", head_subtype, ": ", line_num, delim="")
@@ -199,7 +199,7 @@ class KnowledgeBase:
 		""" Returns a subtype of an entity at the line of the knowledge base. """
 		
 		ent_type = self.get_ent_type(line)
-		if self.headKB[ent_type][""].has_key("SUBTYPE"):
+		if "SUBTYPE" in self.headKB[ent_type][""]:
 			ent_subtype = self.get_field(line, self.headKB[ent_type][""]["SUBTYPE"])
 		else:
 			ent_subtype = ""
@@ -211,17 +211,17 @@ class KnowledgeBase:
 	def get_field(self, line, column):
 		""" Returns a column of a line in the knowledge base. """
 		
-		if isinstance(line, list): # line jako sloupce dané entity
-			return line[column]
-		else: # line jako číslo řádku na kterém je daná entita
-			self.check_or_load_kb()
-			
-			# KB lines are indexed from one
-			try:
+		try:
+			if isinstance(line, list): # line jako sloupce dané entity
+				return line[column]
+			else: # line jako číslo řádku na kterém je daná entita
+				self.check_or_load_kb()
+				
+				# KB lines are indexed from one
 				return self.lines[int(line) - 1][column]
-			except:
-				sys.stderr.write("line " + str(line) + " column " + str(column) + "\n")
-				raise
+		except:
+			sys.stderr.write("line %s column %s\n" % (line, column))
+			raise
 	
 	def get_col_for(self, line, col_name):
 		""" Line numbering from one. """
@@ -238,7 +238,7 @@ class KnowledgeBase:
 		col = 0
 		colCnt = 0
 		for subtype in ent_subtypes:
-			if self.headKB[ent_type][subtype].has_key(col_name):
+			if col_name in self.headKB[ent_type][subtype]:
 				col = self.headKB[ent_type][subtype][col_name]
 				col += colCnt
 				break

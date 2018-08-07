@@ -21,10 +21,19 @@ import metrics_knowledge_base
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-k', '--knowledge-base', help='File containing the knowledge base', required=True)
+parser.add_argument(
+	'-H', '--head-kb',
+	help='Header for the knowledge base, which specify its types and their atributes (default: %(default)s).',
+	default=metrics_knowledge_base.PATH_HEAD_KB
+)
+parser.add_argument(
+	'-k', '--knowledge-base',
+	help='File containing the knowledge base',
+	required=True
+)
 
 arguments = parser.parse_args()
 
-kb = metrics_knowledge_base.KnowledgeBase(path_to_kb=arguments.knowledge_base)
+kb = metrics_knowledge_base.KnowledgeBase(path_to_headkb=arguments.head_kb, path_to_kb=arguments.knowledge_base)
 kb.insert_metrics()
 print kb

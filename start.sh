@@ -77,7 +77,7 @@ if ! $ONLY_DICT; then
 	# creating KB
 
 	echo "creating KB"
-	./prepare_data.sh
+	./prepare_data.sh || exit
 fi
 
 echo
