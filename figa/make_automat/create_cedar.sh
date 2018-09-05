@@ -134,7 +134,7 @@ fi
 # uprava stoplistu (kapitalizace a razeni)
 
 if ! $URI ; then
-  python get_morphological_forms.py < Czech.txt | sort -u > stop_list.var
+  python get_morphological_forms.py < CzechStoplist.txt | sort -u > stop_list.var
   cp stop_list.var stop_list.all
   sed -e 's/\b\(.\)/\u\1/g' < stop_list.var >> stop_list.all
   tr 'a-z' 'A-Z' < stop_list.var >> stop_list.all
