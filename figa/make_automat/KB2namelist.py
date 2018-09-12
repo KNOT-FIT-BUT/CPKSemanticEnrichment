@@ -105,7 +105,7 @@ def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 			if len(re.findall(r"^[0-9 ]+$", _key)) != 0:
 				return
 			# exception for people or artist name (e.g. John Spencer, 1st Earl Spencer)
-			if _type in ["person", "preson:artist"]:
+			if _type in ["person", "person:artist"]:
 				if len(re.findall(r"[0-9]+(st|nd|rd|th)", _key)) == 0:
 					return
 			# we don't want locations with numbers at all
@@ -119,7 +119,7 @@ def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 				return
 
 		# generally, we don't want names starting with low characters
-		if _type in ["person", "preson:artist", "event", "organisation"] or _type.startswith('geo'):
+		if _type in ["person", "person:artist", "event", "organisation"] or _type.startswith('geo'):
 			if len(re.findall(r"^[a-z]", _key)) != 0:
 				return
 
@@ -128,7 +128,7 @@ def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 			return
 
 		# filtering out names ending by ., characters
-		if _type not in ["person", "preson:artist"]:
+		if _type not in ["person", "person:artist"]:
 			if len(re.findall(r"[.,]$", _key)) != 0:
 				return
 
@@ -136,7 +136,7 @@ def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 	add(_key, _value, _type)
 
 	# generating permutations for person and artist names
-	if _type in ["person", "preson:artist"]:
+	if _type in ["person", "person:artist"]:
 		length = _key.count(" ") + 1
 		if length <= 4 and length > 1:
 			parts = _key.split(" ")
@@ -309,14 +309,14 @@ def process_artist(_fields, _line_num, alt_names):
 	for t in aliases:
 		length = t.count(" ") + 1
 		if length >= 2 or confidence >= CONFIDENCE_THRESHOLD:
-			add_to_dictionary(t, _line_num, "preson:artist", _fields, alt_names)
+			add_to_dictionary(t, _line_num, "person:artist", _fields, alt_names)
 
 #	if confidence >= CONFIDENCE_THRESHOLD:
 #		surname_match = SURNAME_MATCH.search(name)
 #		unwanted_match = UNWANTED_MATCH.search(name)
 #		if surname_match and not unwanted_match:
 #			surname = surname_match.group(0)
-#			add_to_dictionary(surname, _line_num, "preson:artist", _fields, alt_names)
+#			add_to_dictionary(surname, _line_num, "person:artist", _fields, alt_names)
 
 def process_other(_fields, _line_num, alt_names):
 	""" Processes a line with entity of location type. """

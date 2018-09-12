@@ -20,7 +20,7 @@ def generate_name_alternatives(kb_path):
             for line in kb:
                 if line:
                     line = line.strip('\n').split('\t')
-                    if not line[0] in ['person', 'preson:artist']:
+                    if not line[0] in ['person', 'person:artist']:
                         continue
                     else:
                         aliases = line[headKB['person']['ALIAS']].split(KB_MULTIVALUE_DELIM)
