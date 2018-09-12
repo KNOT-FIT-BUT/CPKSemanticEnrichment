@@ -107,8 +107,8 @@ class KnowledgeBaseCZ(object):
 		PATH_NAMEDICT = os.path.join(SCRIPT_DIR, "ner_namedict.pkl")
 		PATH_FRAGMENTS = os.path.join(SCRIPT_DIR, "ner_fragments.pkl")
 
-		#person_alias = self.get_head_col("person", "", "ALIAS")
-		person_name = self.get_head_col("person", "", "JMENO")
+		#person_alias = self.get_head_col("person", "", "ALIASES")
+		person_name = self.get_head_col("person", "", "NAME")
 		#artist_other = self.get_head_col("artist", "", "OTHER TERM")
 		#artist_preferred = self.get_head_col("artist", "", "PREFERRED TERM")
 		#artist_display = self.get_head_col("artist", "", "DISPLAY TERM")
@@ -139,7 +139,7 @@ class KnowledgeBaseCZ(object):
 			while text != None:
 				ent_type = self.get_ent_type(line)
 
-				if ent_type in ["person", "person:artist"]:
+				if ent_type in ["person", "preson:artist"]:
 					if ent_type == "person":
 						#whole_names = self.get_data_at(line, person_alias).split(KB_MULTIVALUE_DELIM)
 						whole_names = [self.get_data_at(line, person_name)]

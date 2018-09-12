@@ -18,6 +18,7 @@ figa/make_automat/utf8_valid
 /**/*.so
 /**/*.pyc
 /**/*.ct
+/**/*.dct
 /**/__pycache__
 
 

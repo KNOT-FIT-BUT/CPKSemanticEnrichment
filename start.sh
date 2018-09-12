@@ -58,10 +58,9 @@ if $LOG; then
 fi
 
 mkdir -p ./figa/make_automat/morph/
-wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/VERSION -O VERSION
-wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/KB_cs+id.all -O KB_cs.all
-wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/HEAD-KB+id -O HEAD-KB
-wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/wiki_stats -O wiki_stats
+wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/NEW_KB/NEW_KB-VERSION -O VERSION
+wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/NEW_KB/NEW_KB-KB_cs_statsMetrics.all -O KBstatsMetrics.all
+wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/NEW_KB/NEW_KB-HEAD-KB -O HEAD-KB
 wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/morph/czech.lpn -O ./figa/make_automat/morph/czech.lpn
 wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/morph/czech_vc_prijmeni_navic.lpn -O ./figa/make_automat/morph/czech_vc_prijmeni_navic.lpn
 wget -nv http://knot.fit.vutbr.cz/NAKI_CPK/CPKSemanticEnrichment/inputs_czner_master/morph/prijmeni_navic.lpn -O ./figa/make_automat/morph/prijmeni_navic.lpn

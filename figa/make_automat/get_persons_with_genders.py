@@ -20,15 +20,15 @@ def generate_name_alternatives(kb_path):
             for line in kb:
                 if line:
                     line = line.strip('\n').split('\t')
-                    if not line[0] in ['person', 'person:artist']:
+                    if not line[1] in ['person', 'person:artist', 'person:fictional']:
                         continue
                     else:
                         for subtype in headKB['person']:
-                            aliases = line[headKB['person'][subtype]['ALIAS']].split(KB_MULTIVALUE_DELIM)
-                            aliases.append(line[headKB['person'][subtype]['JMENO']])
+                            aliases = line[headKB['person'][subtype]['ALIASES']].split(KB_MULTIVALUE_DELIM)
+                            aliases.append(line[headKB['person'][subtype]['NAME']])
                             aliases = (a for a in aliases if a.strip() != "")
 
-                            gender = line[7]
+                            gender = line[4]
 
                             for t in aliases:
                                 t = re.sub('\s+', ' ', t).strip()

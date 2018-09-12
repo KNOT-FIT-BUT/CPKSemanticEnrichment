@@ -51,7 +51,7 @@ while [ "$1" != "" ]; do
                 shift
               fi
             fi
-            
+
             KB=$VALUE
             KB_GIVEN=true
             ;;
@@ -71,7 +71,7 @@ elif [ ! -f "$KB" ]; then
   echo "ERROR: Could not found KB on path: ${KB}" >&2
   if ! $KB_GIVEN ; then
     echo "Did you forget to set the parameter \"-k\"? (Default \"${KB}\" was used.)\n" >&2
-    
+
     usage
   fi
   exit
@@ -92,9 +92,9 @@ export PYTHONPATH=../../:$PYTHONPATH
 #======================================================================
 # vytvorenie zoznamu klucov entit v KB a vyhodenie fragmentov zo zoznamu
 python3 KB2namelist.py -a < "$KB" | tr -s ' ' | grep -v -e "[^;]N" > intext_auto
-cat intext_auto | grep "^person:" | sed 's/^person:\t//' > p_intext
-cat intext_auto | grep "^artist:" | sed 's/^artist:\t//' > a_intext
-cat intext_auto | grep "^location:" | sed 's/^location:\t//' > l_intext
+cat intext_auto | grep -P "^person:(fictional:)?" | sed -r 's/^person:(fictional:)?\t//' > p_intext
+cat intext_auto | grep "^person:artist:" | sed 's/^person:artist:\t//' > a_intext
+cat intext_auto | grep -P "^(location|country|country:former|settlement|watercourse|waterarea):" | sed -r 's/^(location|country|country:former|settlement|watercourse|waterarea):\t//' > l_intext
 cat intext_auto | grep "^artwork:" | sed 's/^artwork:\t//' > w_intext
 cat intext_auto | grep "^museum:" | sed 's/^museum:\t//' > c_intext
 cat intext_auto | grep "^event:" | sed 's/^event:\t//' > e_intext
