@@ -8,7 +8,7 @@ reload(sys)
 sys.setdefaultencoding("utf-8")
 
 # loading HEAD-KB file
-headKB = metrics_knowledge_base.getDictHeadKB()
+headKB, ent_type_cols = metrics_knowledge_base.getDictHeadKB()
 
 # multiple values delimiter
 KB_MULTIVALUE_DELIM = metrics_knowledge_base.KB_MULTIVALUE_DELIM
@@ -23,21 +23,22 @@ def generate_name_alternatives(kb_path):
                     if not line[0] in ['person', 'person:artist']:
                         continue
                     else:
-                        aliases = line[headKB['person']['ALIAS']].split(KB_MULTIVALUE_DELIM)
-                        aliases.append(line[headKB['person']['JMENO']])
-                        aliases = (a for a in aliases if a.strip() != "")
+                        for subtype in headKB['person']:
+                            aliases = line[headKB['person'][subtype]['ALIAS']].split(KB_MULTIVALUE_DELIM)
+                            aliases.append(line[headKB['person'][subtype]['JMENO']])
+                            aliases = (a for a in aliases if a.strip() != "")
 
-                        gender = line[7]
+                            gender = line[7]
 
-                        for t in aliases:
-                            t = re.sub('\s+', ' ', t).strip()
-                            unsuitable = ";?!()[]{}<>/~@#$%^&*_=+|\"\\"
-                            t = t.strip()
-                            for x in unsuitable:
-                                if x in t:
-                                    break
-                            else:
-                                name_lines.append(t + '\t' + gender)
+                            for t in aliases:
+                                t = re.sub('\s+', ' ', t).strip()
+                                unsuitable = ";?!()[]{}<>/~@#$%^&*_=+|\"\\"
+                                t = t.strip()
+                                for x in unsuitable:
+                                    if x in t:
+                                        break
+                                else:
+                                    name_lines.append(t + '\t' + gender)
 
         for n in name_lines:
             print(n)
