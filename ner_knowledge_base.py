@@ -139,7 +139,7 @@ class KnowledgeBaseCZ(object):
 			while text != None:
 				ent_type = self.get_ent_type(line)
 
-				if ent_type in ["person", "preson:artist"]:
+				if ent_type in ["person", "person:artist"]:
 					if ent_type == "person":
 						#whole_names = self.get_data_at(line, person_alias).split(KB_MULTIVALUE_DELIM)
 						whole_names = [self.get_data_at(line, person_name)]
