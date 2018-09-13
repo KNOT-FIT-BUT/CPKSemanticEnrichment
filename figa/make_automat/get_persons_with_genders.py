@@ -7,8 +7,8 @@ import metrics_knowledge_base
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
-# loading HEAD-KB file
-headKB, ent_type_cols = metrics_knowledge_base.getDictHeadKB()
+# loading KB struct
+kb_struct = metrics_knowledge_base.KnowledgeBase()
 
 # multiple values delimiter
 KB_MULTIVALUE_DELIM = metrics_knowledge_base.KB_MULTIVALUE_DELIM
@@ -20,25 +20,24 @@ def generate_name_alternatives(kb_path):
             for line in kb:
                 if line:
                     line = line.strip('\n').split('\t')
-                    if not line[1] in ['person', 'person:artist', 'person:fictional']:
+                    if kb_struct.get_ent_type(line) not in ['person', 'person:artist', 'person:fictional']:
                         continue
                     else:
-                        for subtype in headKB['person']:
-                            aliases = line[headKB['person'][subtype]['ALIASES']].split(KB_MULTIVALUE_DELIM)
-                            aliases.append(line[headKB['person'][subtype]['NAME']])
-                            aliases = (a for a in aliases if a.strip() != "")
+                        aliases = kb_struct.get_data_for(line, 'ALIASES').split(KB_MULTIVALUE_DELIM)
+                        aliases.append(kb_struct.get_data_for(line, 'NAME'))
+                        aliases = (a for a in aliases if a.strip() != "")
 
-                            gender = line[4]
+                        gender = kb_struct.get_data_for(line, 'GENDER')
 
-                            for t in aliases:
-                                t = re.sub('\s+', ' ', t).strip()
-                                unsuitable = ";?!()[]{}<>/~@#$%^&*_=+|\"\\"
-                                t = t.strip()
-                                for x in unsuitable:
-                                    if x in t:
-                                        break
-                                else:
-                                    name_lines.append(t + '\t' + gender)
+                        for t in aliases:
+                            t = re.sub('\s+', ' ', t).strip()
+                            unsuitable = ";?!()[]{}<>/~@#$%^&*_=+|\"\\"
+                            t = t.strip()
+                            for x in unsuitable:
+                                if x in t:
+                                    break
+                            else:
+                                name_lines.append(t + '\t' + gender)
 
         for n in name_lines:
             print(n)
