@@ -193,7 +193,7 @@ class KnowledgeBaseCZ(object):
 		#		if other_role and " " not in other_role:
 		#			roles.add(other_role)
 #		if ent_type == "person":
-#			professions = self.get_data_for(line, "POVOLANI").split(KB_MULTIVALUE_DELIM)
+#			professions = self.get_data_for(line, "JOBS").split(KB_MULTIVALUE_DELIM)
 #			for profession in professions:
 #				if profession:
 #					roles.add(profession)
@@ -419,14 +419,13 @@ class KnowledgeBaseCZ(object):
 	def get_dates(self, line):
 		ent_type = self.get_ent_type(line)
 		if ent_type in ["person", "artist"]:
-			dates = set([self.get_data_for(line, "DATUM_NAROZENI"), self.get_data_for(line, "DATUM_UMRTI")])
+			dates = set([self.get_data_for(line, "DATE OF BIRTH"), self.get_data_for(line, "DATE OF DEATH")])
 			dates.discard("")
 			return dates
 		return set()
 
 	def get_nationalities(self, line):
-
-		return self.get_data_for(line, "NARODNOST").split(KB_MULTIVALUE_DELIM)
+		return self.get_data_for(line, "NATIONALITY").split(KB_MULTIVALUE_DELIM)
 
 
 class KbDaemon(object):
