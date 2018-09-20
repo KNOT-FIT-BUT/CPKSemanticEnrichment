@@ -24,7 +24,7 @@ with open("wiki_stats") as wiki_stats:
     stats = dict()
     for line in wiki_stats:
         items = line.rstrip("\n").split("\t")
-        url = "http://cs.wikipedia.org/wiki/" + items[0]
+        url = "https://cs.wikipedia.org/wiki/" + items[0]
         stats[url] = items[1:]
 
 found = 0
@@ -35,7 +35,7 @@ kb_struct = metrics_knowledge_base.KnowledgeBase()
 for line in sys.stdin:
     columns = line.rstrip("\n").split("\t")
     
-    link = kb_struct.get_data_for(columns, "WIKI_URL")
+    link = kb_struct.get_data_for(columns, "WIKIPEDIA LINK")
     if link and link in stats:
         columns[kb_struct.get_col_for(columns, "WIKI BACKLINKS")] = stats[link][0]
         columns[kb_struct.get_col_for(columns, "WIKI HITS")] = stats[link][1]
