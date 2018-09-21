@@ -22,6 +22,7 @@ import collections
 import dates
 import name_recognizer.data_row as module_data_row
 import name_recognizer.name_recognizer as name_recognizer
+import numpy
 
 # Pro debugování:
 #import debug
@@ -859,7 +860,7 @@ class Context(object):
 #            mentioned_in_par_score = self.mentions[par_index]['person'][person_name] * 100 / sum(self.mentions[par_index]['person'].values())
 
         # summing up the scores
-        result = (people_nationality_score + people_date_score + people_profession_score + mentioned_in_par_score) / 4
+        result = numpy.average([people_nationality_score, people_date_score, people_profession_score, mentioned_in_par_score])
 
         # storing new max score
         if candidate in self.people_max_scores and result > self.people_max_scores[candidate]:
@@ -876,7 +877,7 @@ class Context(object):
         if ent_type == "settlement":
             country = [self.kb.get_data_for(candidate, "COUNTRY")]
             country_score = self.mentioned_in_par(country, 'country')
-            mentioned_in_par_score = (mentioned_in_par_score + country_score) / 2
+            mentioned_in_par_score = numpy.average([mentioned_in_par_score, country_score])
 
         return mentioned_in_par_score
 
@@ -888,7 +889,7 @@ class Context(object):
         if ent_type == 'watercourse':
             geo = [self.kb.get_data_for(candidate, "SOURCE_LOC")]
             geo_score = self.mentioned_in_par(geo, 'geo')
-            mentioned_in_par_score = (mentioned_in_par_score + geo_score) / 2
+            mentioned_in_par_score = numpy.average([mentioned_in_par_score, geo_score])
 
         return mentioned_in_par_score
 
@@ -954,7 +955,7 @@ class Context(object):
             org_date_score = org_date_score * 100 / len(self.people_dates[par_index])
 
 
-        result = (mentioned_in_par_score + place_score + org_date_score) / 3
+        result = numpy.average([mentioned_in_par_score, place_score, org_date_score])
 
         return result
 
@@ -981,7 +982,7 @@ class Context(object):
         #if place_score:
         #    place_score = place_score * 100 / self.country_sum[par_index]
 
-        result = (mentioned_in_par_score + place_score) / 2
+        result = numpy.average([mentioned_in_par_score, place_score])
 
         return result
 
@@ -1009,7 +1010,7 @@ class Context(object):
        #if place_score:
        #    place_score = place_score * 100 / self.country_sum[par_index]
 
-        result = (mentioned_in_par_score + place_score) / 2
+        result = numpy.average([mentioned_in_par_score, place_score])
 
         return result
 
@@ -1037,7 +1038,7 @@ class Context(object):
         #if place_score:
         #    place_score = place_score * 100 / self.country_sum[par_index]
 
-        result = (mentioned_in_par_score + place_score) / 2
+        result = numpy.average([mentioned_in_par_score, place_score])
 
         return result
 
@@ -1061,7 +1062,7 @@ class Context(object):
         #if place_score:
         #    place_score = place_score * 100 / self.country_sum[par_index]
 #
-        result = (mentioned_in_par_score + place_score) / 2
+        result = numpy.average([mentioned_in_par_score, place_score])
 
         return result
 
@@ -1095,7 +1096,7 @@ class Context(object):
         #if place_score:
         #    place_score = place_score * 100 / self.country_sum[par_index]
 #
-        result = (mentioned_in_par_score + place_score) / 2
+        result = numpy.average([mentioned_in_par_score, place_score])
 
         return result
 
@@ -1112,7 +1113,7 @@ class Context(object):
             places.extend(locations.split(KB_MULTIVALUE_DELIM))
         place_score = self.mentioned_in_par(places, 'geoplace:populatedPlace')
 
-        result = (mentioned_in_par_score + place_score) / 2
+        result = numpy.average([mentioned_in_par_score, place_score])
         return result
 
     def mountain_pass_percentile(self, candidate):
@@ -1128,7 +1129,7 @@ class Context(object):
             places.extend(locations.split(KB_MULTIVALUE_DELIM))
         place_score = self.mentioned_in_par(places, 'geoplace:populatedPlace')
 
-        result = (mentioned_in_par_score + place_score) / 2
+        result = numpy.average([mentioned_in_par_score, place_score])
         return result
 
 
@@ -1139,7 +1140,7 @@ class Context(object):
         places = [self.kb.get_data_for(candidate, "COUNTRY")]
         place_score = self.mentioned_in_par(places, 'geoplace:populatedPlace')
 
-        result = (mentioned_in_par_score + place_score) / 2
+        result = numpy.average([mentioned_in_par_score, place_score])
         return result
 
     def river_percentile(self, candidate):
@@ -1165,7 +1166,7 @@ class Context(object):
             places.extend(locations.split(KB_MULTIVALUE_DELIM))
         place_score = self.mentioned_in_par(places, 'geoplace:populatedPlace')
 
-        result = (mentioned_in_par_score + place_score) / 2
+        result = numpy.average([mentioned_in_par_score, place_score])
         return result
 
     def waterfall_percentile(self, candidate):
@@ -1187,7 +1188,7 @@ class Context(object):
             places.extend(locations.split(KB_MULTIVALUE_DELIM))
         place_score = self.mentioned_in_par(places, 'geoplace:populatedPlace')
 
-        result = (mentioned_in_par_score + place_score) / 2
+        result = numpy.average([mentioned_in_par_score, place_score])
         return result
 
 
