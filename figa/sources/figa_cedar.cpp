@@ -61,7 +61,7 @@ int figa_cedar::checkFileNameForDictType(const char* file,bool &cedar){
  */
 bool figa_cedar::delimiter(char c){
     // checks if symbol is white space, punctiation or control character
-    if(isspace(c) ||  iscntrl(c))
+    if(isspace(c) || ispunct(c) || iscntrl(c))
         return true;
     return false;
 }
