@@ -11,6 +11,10 @@ morph/*
 figa/figav1.0
 figa/make_automat/utf2symbols
 figa/make_automat/utf8_valid
+figa/sources/marker.py
+figa/sources/marker_wrap.cc
+figa/sources/kb_loader_slow
+figa/sources/kb_loader_fast
 
 
 /**/*~
