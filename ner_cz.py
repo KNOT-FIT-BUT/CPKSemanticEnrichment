@@ -25,8 +25,7 @@ import name_recognizer.name_recognizer as name_recognizer
 import numpy
 
 # Pro debugování:
-#import debug
-#import difflib, linecache, inspect
+import difflib, linecache, inspect
 
 import logging
 module_logger = logging.getLogger("ner")
@@ -35,6 +34,11 @@ console_handler = logging.StreamHandler()
 formatter = logging.Formatter("%(levelname)s: %(name)s: %(context)s:\n'''\n%(message)s\n'''")
 console_handler.setFormatter(formatter)
 module_logger.addHandler(console_handler)
+
+import debug
+debug.DEBUG_EN = False
+from debug import print_dbg_en
+#
 
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -1209,7 +1213,7 @@ def offsets_of_paragraphs(input_string):
     assert isinstance(input_string, unicode)
 
     result = [0]
-    result.extend((par_match.end() for par_match in re.finditer(r"\r\n[\r\n]+", input_string)))
+    result.extend((par_match.end() for par_match in re.finditer(r"(\r?\n|\r)\1+", input_string))) # {≥2×LF|≥2×CRLF|≥2×CR} ⇒ nový odstavec
     return result
 
 #example:
@@ -1551,15 +1555,15 @@ def recognize(kb, input_string, print_all=False, print_result=True, print_score=
     assert isinstance(split_interval, bool)
     assert isinstance(find_names, bool)
 
-#    def debugChangesInEntities(entities, responsible_line):
-#        if debug.DEBUG_EN:
-#            global debug_last_status_of_entities
-#            if "debug_last_status_of_entities" in globals():
-#                new_status_of_entities = [e+"\n" for e in map(str, sorted(entities, key=lambda ent: ent.start_offset))]
-#                print_dbg_en(responsible_line, "".join(difflib.unified_diff(debug_last_status_of_entities, new_status_of_entities, fromfile='before', tofile='after', n=0))[:-1], delim="\n", stack_num=2)
-#                debug_last_status_of_entities = new_status_of_entities
-#            else:
-#                debug_last_status_of_entities = [e+"\n" for e in map(str, sorted(entities, key=lambda ent: ent.start_offset))]
+    def debugChangesInEntities(entities, responsible_line):
+        if debug.DEBUG_EN:
+            global debug_last_status_of_entities
+            if "debug_last_status_of_entities" in globals():
+                new_status_of_entities = [e+"\n" for e in map(str, sorted(entities, key=lambda ent: ent.start_offset))]
+                print_dbg_en(responsible_line, "".join(difflib.unified_diff(debug_last_status_of_entities, new_status_of_entities, fromfile='before', tofile='after', n=0))[:-1], delim="\n", stack_num=2)
+                debug_last_status_of_entities = new_status_of_entities
+            else:
+                debug_last_status_of_entities = [e+"\n" for e in map(str, sorted(entities, key=lambda ent: ent.start_offset))]
 
     # replacing non-printable characters and semicolon with space characters
     input_string = re.sub("[;\x01-\x08\x0e-\x1f\x0c\x7f]", " ", input_string)
@@ -1573,8 +1577,10 @@ def recognize(kb, input_string, print_all=False, print_result=True, print_score=
     register = EntityRegister()
     # a set of all possible senses
     global_senses = set()
+    
     # getting entities from figa
     figa_entities = get_entities_from_figa(kb, input_string, input_string_in_unicode, lowercase, global_senses, register)
+    debugChangesInEntities(figa_entities, linecache.getline(__file__, inspect.getlineno(inspect.currentframe())-1))
 
     # retaining only possible coreferences for each entity
     for e in figa_entities:
@@ -1582,7 +1588,7 @@ def recognize(kb, input_string, print_all=False, print_result=True, print_score=
 
     # removing shorter entity from overlapping entities
     figa_entities = remove_shorter_entities(figa_entities)
-    #debugChangesInEntities(entities, linecache.getline(__file__, inspect.getlineno(inspect.currentframe())-1))
+    debugChangesInEntities(figa_entities, linecache.getline(__file__, inspect.getlineno(inspect.currentframe())-1))
 
     # removing entities without any sense
     nationalities = []
@@ -1593,8 +1599,7 @@ def recognize(kb, input_string, print_all=False, print_result=True, print_score=
         elif e.senses or e.partial_match_senses or e.source.lower() in PRONOUNS:
             entities.append(e)
 
-    #entities = [e for e in entities if e.senses or e.partial_match_senses or e.source.lower() in PRONOUNS]
-    #debugChangesInEntities(entities, linecache.getline(__file__, inspect.getlineno(inspect.currentframe())-1))
+    debugChangesInEntities(entities, linecache.getline(__file__, inspect.getlineno(inspect.currentframe())-1))
 
     # searches for dates and intervals in the input
     dates_and_intervals = dates.find_dates(input_string_in_unicode, split_interval=split_interval)
@@ -1625,9 +1630,9 @@ def recognize(kb, input_string, print_all=False, print_result=True, print_score=
 
     # disambiguates with context
     [e.disambiguate_with_context(context) for e in entities]
-    #debugChangesInEntities(entities, linecache.getline(__file__, inspect.getlineno(inspect.currentframe())-1))
+    debugChangesInEntities(entities, linecache.getline(__file__, inspect.getlineno(inspect.currentframe())-1))
     fix_poor_disambiguation(entities, context)
-    #debugChangesInEntities(entities, linecache.getline(__file__, inspect.getlineno(inspect.currentframe())-1))
+    debugChangesInEntities(entities, linecache.getline(__file__, inspect.getlineno(inspect.currentframe())-1))
 
     #name_coreferences = [e for e in entities if e.source.lower() not in PRONOUNS]
     #resolve_coreferences(name_coreferences, context, print_all, register) # Zde se ověřuje, zda-li části jmen jsou odkazy nebo samostatné entity.
