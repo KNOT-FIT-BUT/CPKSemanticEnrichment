@@ -20,10 +20,10 @@ usage()
 {
     echo "Usage: create_cedar_autocomplete.sh [-h] [-c|-d] --knowledge-base=KBstatsMetrics.all"
     echo ""
-    echo "\t-h --help"
-    echo "\t-c --cedar (default)"
-    echo "\t-d --darts"
-    echo "\t-k --knowledge-base=$KB"
+    echo -e "\t-h --help"
+    echo -e "\t-c --cedar (default)"
+    echo -e "\t-d --darts"
+    echo -e "\t-k --knowledge-base=$KB"
     echo ""
 }
 

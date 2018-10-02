@@ -24,12 +24,12 @@ usage()
 {
     echo "Usage: create_cedar.sh [-h] [-l|-u] [-c|-d] --knowledge-base=KBstatsMetrics.all"
     echo ""
-    echo "\t-h --help"
-    echo "\t-l --lowercase"
-    echo "\t-u --uri"
-    echo "\t-c --cedar (default)"
-    echo "\t-d --darts"
-    echo "\t-k --knowledge-base=$KB"
+    echo -e "\t-h --help"
+    echo -e "\t-l --lowercase"
+    echo -e "\t-u --uri"
+    echo -e "\t-c --cedar (default)"
+    echo -e "\t-d --darts"
+    echo -e "\t-k --knowledge-base=$KB"
     echo ""
 }
 
