@@ -67,7 +67,7 @@ def load_name_inflections(cznames_file):
 			if line:
 				line = line.strip('\n').split('\t')
 				name = line[0]
-				aliases = line[2].split('|')
+				aliases = line[2].split('|') if line[2] != '' else []
 				aliases = [a.split('#')[0] for a in aliases]
 
 				if name not in result:
