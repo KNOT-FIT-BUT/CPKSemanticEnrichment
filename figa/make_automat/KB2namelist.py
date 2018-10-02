@@ -24,7 +24,7 @@ limitations under the License.
 import itertools
 import argparse
 import os
-import re
+import regex
 import sys
 from library.config import AutomataVariants
 from library.utils import remove_accent
@@ -87,7 +87,7 @@ def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 	"""
 
 	# removing white spaces
-	_key = re.sub('\s+', ' ', _key).strip()
+	_key = regex.sub('\s+', ' ', _key).strip()
 
 	# there are no changes for the name from the allow list
 	if _key not in allow_list:
@@ -100,13 +100,13 @@ def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 				return
 
 		# inspecting names with numbers
-		if len(re.findall(r"[0-9]+", _key)) != 0:
+		if len(regex.findall(r"[0-9]+", _key)) != 0:
 			# we don't want entities containing only numbers
-			if len(re.findall(r"^[0-9 ]+$", _key)) != 0:
+			if len(regex.findall(r"^[0-9 ]+$", _key)) != 0:
 				return
 			# exception for people or artist name (e.g. John Spencer, 1st Earl Spencer)
 			if _type in ["person", "person:artist", "person:fictional"]:
-				if len(re.findall(r"[0-9]+(st|nd|rd|th)", _key)) == 0:
+				if len(regex.findall(r"[0-9]+(st|nd|rd|th)", _key)) == 0:
 					return
 			# we don't want locations with numbers at all
 			if _type.startswith("geoplace:"):
@@ -120,7 +120,7 @@ def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 
 		# generally, we don't want names starting with low characters
 		if _type in ["person", "person:artist", "person:fictional", "event", "organisation"] or _type.startswith('geo'):
-			if len(re.findall(r"^[a-z]", _key)) != 0:
+			if len(regex.findall(r"^\p{Ll}+", _key)) != 0:
 				return
 
 		# filtering out all names with length smaller than 2 and greater than 80 characters
@@ -129,7 +129,7 @@ def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 
 		# filtering out names ending by ., characters
 		if _type not in ["person", "person:artist", "person:fictional"]:
-			if len(re.findall(r"[.,]$", _key)) != 0:
+			if len(regex.findall(r"[.,]$", _key)) != 0:
 				return
 
 	# adding name into the dictionary
@@ -158,48 +158,48 @@ def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 	# adding various alternatives for given types
 	if _type in ["person", "person:artist", "person:fictional", 'organisation'] or _type.startswith('geo'):
 		if "Svatý " in _key:
-			add(re.sub(r"Svatý ", "Sv. ", _key), _value, _type) # Saint John -> Sv. John
-			add(re.sub(r"Svatý ", "Sv.", _key), _value, _type) # Saint John -> Sv.John
-			add(re.sub(r"Svatý ", "Sv ", _key), _value, _type) # Saint John -> Sv John
+			add(regex.sub(r"Svatý ", "Sv. ", _key), _value, _type) # Saint John -> Sv. John
+			add(regex.sub(r"Svatý ", "Sv.", _key), _value, _type) # Saint John -> Sv.John
+			add(regex.sub(r"Svatý ", "Sv ", _key), _value, _type) # Saint John -> Sv John
 		if "Sv " in _key:
-			add(re.sub(r"Sv ", "Sv. ", _key), _value, _type) # St John -> St. John
-			add(re.sub(r"Sv ", "Sv.", _key), _value, _type) # St John -> St.John
-			add(re.sub(r"Sv ", "Svatý ", _key), _value, _type) # St John -> Saint John
+			add(regex.sub(r"Sv ", "Sv. ", _key), _value, _type) # St John -> St. John
+			add(regex.sub(r"Sv ", "Sv.", _key), _value, _type) # St John -> St.John
+			add(regex.sub(r"Sv ", "Svatý ", _key), _value, _type) # St John -> Saint John
 		if "Sv." in _key:
 			if "Sv. " in _key:
-				add(re.sub(r"Sv\. ", "Sv ", _key), _value, _type) # St. John -> St John
-				add(re.sub(r"Sv\. ", "Sv.", _key), _value, _type) # St. John -> St.John
-				add(re.sub(r"Sv\. ", "Svatý ", _key), _value, _type) # St. John -> Saint John
+				add(regex.sub(r"Sv\. ", "Sv ", _key), _value, _type) # St. John -> St John
+				add(regex.sub(r"Sv\. ", "Sv.", _key), _value, _type) # St. John -> St.John
+				add(regex.sub(r"Sv\. ", "Svatý ", _key), _value, _type) # St. John -> Saint John
 			else:
-				add(re.sub(r"Sv\.", "Sv ", _key), _value, _type) # St.John -> St John
-				add(re.sub(r"Sv\.", "Sv. ", _key), _value, _type) # St.John -> St. John
-				add(re.sub(r"Sv\.", "Svatý ", _key), _value, _type) # St.John -> Saint John
+				add(regex.sub(r"Sv\.", "Sv ", _key), _value, _type) # St.John -> St John
+				add(regex.sub(r"Sv\.", "Sv. ", _key), _value, _type) # St.John -> St. John
+				add(regex.sub(r"Sv\.", "Svatý ", _key), _value, _type) # St.John -> Saint John
 
 	if _type in ["person", "person:artist", "person:fictional"]:
-		add(re.sub(r"([A-Z])[a-z]* ([A-Z][a-z]*)", "\g<1>. \g<2>", _key), _value, _type) # Adolf Born -> A. Born
-		add(re.sub(r"([A-Z])[a-z]* ([A-Z])[a-z]* ([A-Z][a-z]*)", "\g<1>. \g<2>. \g<3>", _key), _value, _type) # Peter Paul Rubens -> P. P. Rubens
-		add(re.sub(r"([A-Z][a-z]*) ([A-Z])[a-z]* ([A-Z][a-z]*)", "\g<1> \g<2>. \g<3>", _key), _value, _type) # Peter Paul Rubens -> Peter P. Rubens
+		add(regex.sub(r"(\p{Lu})\p{Ll}* (\p{Lu}\p{Ll}*)", "\g<1>. \g<2>", _key), _value, _type) # Adolf Born -> A. Born
+		add(regex.sub(r"(\p{Lu})\p{Ll}* (\p{Lu})\p{Ll}* (\p{Lu}\p{Ll}*)", "\g<1>. \g<2>. \g<3>", _key), _value, _type) # Peter Paul Rubens -> P. P. Rubens
+		add(regex.sub(r"(\p{Lu}\p{Ll}*) (\p{Lu})\p{Ll}* (\p{Lu}\p{Ll}*)", "\g<1> \g<2>. \g<3>", _key), _value, _type) # Peter Paul Rubens -> Peter P. Rubens
 		if "Mc" in _key:
-			add(re.sub(r"Mc([A-Z])", "Mc \g<1>", _key), _value, _type) # McCollum -> Mc Collum
-			add(re.sub(r"Mc ([A-Z])", "Mc\g<1>", _key), _value, _type) # Mc Collum -> McCollum
+			add(regex.sub(r"Mc(\p{Lu})", "Mc \g<1>", _key), _value, _type) # McCollum -> Mc Collum
+			add(regex.sub(r"Mc (\p{Lu})", "Mc\g<1>", _key), _value, _type) # Mc Collum -> McCollum
 		if "." in _key:
-			new_key = re.sub(r"([A-Z])\. (?=[A-Z])", "\g<1>.", _key) # J. M. W. Turner -> J.M.W.Turner
+			new_key = regex.sub(r"(\p{Lu})\. (?=\p{Lu})", "\g<1>.", _key) # J. M. W. Turner -> J.M.W.Turner
 			add(new_key, _value, _type)
-			new_key = re.sub(r"([A-Z])\.(?=[A-Z][a-z]+)", "\g<1>. ", new_key) # J.M.W.Turner -> J.M.W. Turner
+			new_key = regex.sub(r"(\p{Lu})\.(?=\p{Lu}\p{Ll}+)", "\g<1>. ", new_key) # J.M.W.Turner -> J.M.W. Turner
 			add(new_key, _value, _type)
-			add(re.sub(r"\.", "", new_key), _value, _type) # J.M.W. Turner -> JMW Turner
+			add(regex.sub(r"\.", "", new_key), _value, _type) # J.M.W. Turner -> JMW Turner
 		if "-" in _key:
-			add(re.sub(r"\-", " ", _key), _value, _type) # Payne-John Christo -> Payne John Christo
+			add(regex.sub(r"\-", " ", _key), _value, _type) # Payne-John Christo -> Payne John Christo
 		if "ì" in _key:
-			add(re.sub("ì", "í", _key), _value, _type) # Melozzo da Forlì -> Melozzo da Forlí
+			add(regex.sub("ì", "í", _key), _value, _type) # Melozzo da Forlì -> Melozzo da Forlí
 
 		parts = _key.split(" ")
 		# if a name contains any of these words, we will not create permutations
 		if not (set(parts) & set(["von", "van"])):
 			for x in f_name:
 				if x in _key:
-					new_key = re.sub(' ?,? ' + x + '$', '', _key) # John Brown, Jr. -> John Brown
-					new_key = re.sub('^' + x + ' ', '', new_key) # Sir Patrick Stewart -> Patrick Stewart
+					new_key = regex.sub(' ?,? ' + x + '$', '', _key) # John Brown, Jr. -> John Brown
+					new_key = regex.sub('^' + x + ' ', '', new_key) # Sir Patrick Stewart -> Patrick Stewart
 					if new_key.count(' ') >= 1:
 						add(new_key, _value, _type)
 
@@ -212,10 +212,10 @@ def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 				country = kb_struct.get_data_for(_fields, 'SOURCE_LOC')
 			if country and country not in _key:
 				add(_key + ", " + country, _value, _type) # Peking -> Peking, China
-				add(re.sub("United States", "US", _key + ", " + country), _value, _type)
+				add(regex.sub("United States", "US", _key + ", " + country), _value, _type)
 
 	#if _type in ["event"]:
-	#	if len(re.findall(r"^[0-9]{4} (Summer|Winter) Olympics$", _key)) != 0:
+	#	if len(regex.findall(r"^[0-9]{4} (Summer|Winter) Olympics$", _key)) != 0:
 	#		location = kb_struct.get_data_for(_fields, 'LOCATION')
 	#		year = kb_struct.get_data_for(_fields, 'START DATE')[:4]
 	#		if year and location and "|" not in location:
@@ -233,7 +233,7 @@ def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 	#			country = kb_struct.get_data_for(_fields, 'COUNTRY')
 	#		if country not in _key:
 	#			add(_key + ", " + country, _value, _type) # Peking -> Peking, China
-	#			add(re.sub("United States", "US", _key + ", " + country), _value, _type)
+	#			add(regex.sub("United States", "US", _key + ", " + country), _value, _type)
 
 def add(_key, _value, _type):
 	"""
@@ -258,7 +258,7 @@ def add(_key, _value, _type):
 		_key = _key.lower()
 
 	# removing entities that begin with '-. or space
-	if len(re.findall(r"^[ '-\.]", _key)) != 0:
+	if len(regex.findall(r"^[ '-\.]", _key)) != 0:
 		return
 
 	# adding the type-specific prefix to begining of the name
@@ -278,8 +278,8 @@ def add(_key, _value, _type):
 #		dictionary[_accent] = set()
 #	dictionary[_accent].add(_value)
 
-SURNAME_MATCH = re.compile(r"(((?<=^)|(?<=[ ]))(da |von )?(([A-Z][a-z]*-)?([A-Z][a-z]+))$)")
-UNWANTED_MATCH = re.compile(r"(Princ|Svatý|,|z|[0-9])")
+SURNAME_MATCH = regex.compile(r"(((?<=^)|(?<=[ ]))(da |von )?((\p{Lu}\p{Ll}*-)?(\p{Lu}\p{Ll}+))$)")
+UNWANTED_MATCH = regex.compile(r"(Princ|Svatý|,|z|[0-9])")
 
 def process_person(_fields, _line_num, alt_names):
 	""" Processes a line with entity of person type. """
