@@ -115,7 +115,7 @@ if ! test -f "${F_PERSONS_WITH_GENDERS}"; then
 fi
 
 if ! test -f "${F_CZECHNAMES}" || test `stat -c %Y "${F_CZECHNAMES}"` -lt `stat -c %Y "${F_PERSONS_WITH_GENDERS}"`; then
-  python3 czechnames/namegen.py -o "${F_TMP_CZECHNAMES}" -x "${F_CZECHNAMES_INVALID}" "${F_PERSONS_WITH_GENDERS}"
+  python3 czechnames/namegen.py -o "${F_TMP_CZECHNAMES}" -x "${F_CZECHNAMES_INVALID}_gender" -X "${F_CZECHNAMES_INVALID}_inflection" "${F_PERSONS_WITH_GENDERS}"
   mv "${F_TMP_CZECHNAMES}" "${F_CZECHNAMES}"
 fi
 
