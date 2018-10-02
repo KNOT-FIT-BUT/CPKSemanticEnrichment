@@ -27,13 +27,13 @@ class name:
 		gettype.prep_phrase = False
 		self.parts = list() # list of lists (im too lazy to make a dict here) (slovo, oddelovac, znacka, tvary)
 		self.gender = None
-		
+
 		words = line.split()
-		
-		
+
+
 		if words[-1] in ["M", "F"]:
 			self.gender = words.pop()
-		
+
 		for word in words:
 			if word.find("-") > 0:
 				for i, wrd in enumerate(word.split("-")):
@@ -44,33 +44,33 @@ class name:
 						self.parts.append([wrd, " ", kategorie, None])
 					else:
 						self.parts.append([wrd, "-", kategorie, None])
-				
+
 			else:
 				kategorie = gettype(word)
 				if kategorie == "d'S":
 					word= word[2:]
-					
+
 				self.parts.append([word, " ", kategorie, None])
 			if gettype.prep_phrase == True:
 				self.parts[-1][2] = ""
-		
+
 		if not self.gender:
 			self.gender = get_gender(words)
-		
+
 		if not self.gender:
 			out = ""
 			for word in self.parts:
 				out += word[1] + word[0]
 			raise Exception("Unknown gender, skipping: " + out +"\n")
-			
-			
+
+
 		for item in self.parts[::-1]:
 			if item == self.parts[0]:
 				break
 			if item[2] == "G":
 				item[2] = "S"
 				break
-			
+
 	def get_unknowns(self, unknowns):
 		for i, part in enumerate(self.parts):
 			try:
@@ -82,17 +82,17 @@ class name:
 							unknowns.add((part[0], self.gender, "s"+self.gender))
 			except Exception as e:
 				sys.stderr.write(str(e))
-				
+
 	def generate(self):
 		for i, part in enumerate(self.parts):
 			if part[2] in ["T", "P", "C", "N", ""]:
 				self.parts[i][3] = [[part[0]] for i in range(7)]
 			else:
 				self.parts[i][3] = [flex_word(part[0], self.gender, pad) for pad in range(1, 8)]
-				
+
 	def __str__(self):
 		tvary = list()
-		
+
 		for pad in range(7):
 			tvary.append(set())
 			for word in self.parts:
@@ -101,13 +101,13 @@ class name:
 		for word in self.parts:
 			if word[2] == "d'S":
 				out += word[1] + "d'" + word[0]
-			else:		
+			else:
 				out += word[1] + word[0]
-		
+
 		out += "\t" + self.gender + "\t"
 
 		out = out[1:]
-		
+
 		if nozk:
 			out_set = set()
 			for tvary_pad in tvary:
@@ -115,7 +115,7 @@ class name:
 					out_set.add(tvar)
 			out += "|".join(out_set)
 			return out
-			
+
 		else:
 			out_arr = list()
 			for pad in range(7):
@@ -128,13 +128,13 @@ class name:
 							kategorie += "d'"
 						if part[2]:
 							kategorie += part[2]
-						
+
 					out_arr.append(tvar+"#" + "k1g" + self.gender + "nSc" + str(pad+1) + "#" + kategorie)
-			
+
 			out += "|".join(out_arr)
 			return out
 
-			
+
 def load_trs4p_pns4l (para_filename, lpn_filename):
     trs4p={}
     with open(para_filename) as parafile:
@@ -155,7 +155,7 @@ def load_trs4p_pns4l (para_filename, lpn_filename):
                 pns4l[lemma].add((paradigm,note))
 
     return trs4p, pns4l
-	
+
 
 def add_next_word(seznam, seznam2, separator, znacka):
 	combinations = set()
@@ -169,7 +169,7 @@ def add_next_word(seznam, seznam2, separator, znacka):
 		return set(seznam2)
 	return combinations
 
-	
+
 def flex_word(word, rod, pad):
 	operation = "k1g" + rod + "nSc" + str(pad)
 	return list(set(gen_wrap(lemma = word, tag_filter = operation, trs4p = trs4p, pns4l = pns4l)))
@@ -179,32 +179,32 @@ def gen_wrap(lemma, tag_filter, pns4l, trs4p):
 	for (paradigm,note) in pns4l[lemma]:
 		for tag_and_rule in trs4p[paradigm].split(' '):
 			tag, remove, prefix_suffix = tag_and_rule.split(':')
-			if re.search(tag_filter,tag): 
+			if re.search(tag_filter,tag):
 				if not re.search("wH", tag):
 					yield gen_wordform.wordform_from_lemma_and_rule(lemma, remove, prefix_suffix)
-	
-		
+
+
 def gettype(word):
 	if gettype.prep_phrase:
 		return
-	
+
 	if word[-3:] == "ová":
 		return "S"
-	
+
 	if word[:2] == "d'" or word[:2] == "D'":
 		return "d'S"
 	if word[-1:] == ".":
 		return "T"
-	
+
 	if word not in pns4l:
 		return "G"
-		
+
 	else :
 		if pns4l[word]:
 			rozbor = [para for para, note in pns4l[word]]
 		else:
 			return "G"
-	
+
 	slovni_druh = [trs4p[para].split(' ')[0][:2] for para in rozbor]
 
 	if "k1" in slovni_druh:
@@ -230,25 +230,27 @@ def init(args):
 	global trs4p
 	global pns4l
 	global output_file
-	global output_file_invalid
+	global output_file_invalid_gender
+	global output_file_invalid_inflection
 	global nozk
 	global paradigms
 	global lpn
-	
+
 	if args.parafile:
 		paradigms = args.parafile
 	if args.lpnfile:
 		lpn = args.lpnfile
-	
+
 	nozk = args.short
 	trs4p, pns4l = load_trs4p_pns4l (paradigms, lpn)
-		
+
 	gettype.prep_phrase = False
-	
-	try: 
+
+	try:
 		if args.output:
 			output_file =  open(args.output, 'w')
-		output_file_invalid = open(args.invalid if args.invalid else FILE_DEVNULL, 'w')
+		output_file_invalid_gender = open(args.invalid_gender if args.invalid_gender else FILE_DEVNULL, 'w')
+		output_file_invalid_inflection = open(args.invalid_inflection if args.invalid_inflection else FILE_DEVNULL, 'w')
 	except Exception as e:
 		sys.stderr.write(str(e))
 		close_IO()
@@ -256,16 +258,16 @@ def init(args):
 
 def add_lpn(lpn):
 	global pns4l
-	
+
 	with open(lpn) as lpnfile:
 		for line in lpnfile:
 			line = line.rstrip()
 			lemma, paradigm, note = line.split('#')
-			
+
 			if paradigm in trs4p:
 				pns4l[lemma].add((paradigm,note))
-			
-# urceni pohlavi jmena	
+
+# urceni pohlavi jmena
 def get_gender(jmeno):
 	gender = None
 	for word in jmeno:
@@ -280,14 +282,15 @@ def get_gender(jmeno):
 			return "F"
 	if not gender:
 		return None
-	
+
 	return gender[-1]
-		
+
 # uklid
 def close_IO():
 		try:
 			output_file.close()
-			output_file_invalid.close()
+			output_file_invalid_gender.close()
+			output_file_invalid_inflection.close()
 		except Exception:
 			pass
 
@@ -301,10 +304,10 @@ def load(unknownargs):
 		except Exception as e:
 			sys.stderr.write(str(e)+"\n")
 	return names
-	
+
 def make_lntrf(names):
 	global unknowns
-	
+
 	for n in names:
 		n.get_unknowns(unknowns)
 
@@ -320,27 +323,32 @@ def generate(names):
 def print_names(names):
 	for n in names:
 		# if valid gender and for all name_part, the name_variants are not empty
-		if (n.gender in ['F', 'M'] and reduce(lambda a, b: a and b, map(lambda name_part: reduce(lambda x, y: x and y, map(bool, name_part[3])), n.parts))):
-			output_file.write(str(n) + "\n")
+		if n.gender in ['F', 'M']:
+			if reduce(lambda a, b: a and b, map(lambda name_part: reduce(lambda x, y: x + y, map(int, map(bool, name_part[3]))) >= 7, n.parts)):
+				output_file.write(str(n) + "\n")
+			else:
+				output_file_invalid_inflection.write(str(n) + "\n")
+				output_file.write(re.sub(r"^(.*\t.*\t).*$", r"\1", str(n)) + "\n")
 		else:
-			output_file_invalid.write(str(n) + "\n")
-			#output_file_invalid.write(n.gender + " (" + " ".join(name_part[0] for name_part in n.parts) + ")\n")
+			output_file_invalid_gender.write(str(n) + "\n")
+			output_file.write(re.sub(r"^(.*\t).*\t.*$", r"\1", str(n)) + "\t\n")
 
 def make_lpn():
 	os.system(morphdir + "lntrf2lpn.py -l " + morphdir + "prijmeni_navic.lpn -g guesser -e explainer namegen.unknown.lntrf > namegen.unknown.lpn 2> namegen.unknown.guess_err")
-	
-	
-	
+
+
+
 def get_args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-o", "--output", help="Vystupni soubor", type=str)
-	parser.add_argument("-x", "--invalid", help="Vystupni soubor pro nevalidni jmena", type=str)
+	parser.add_argument("-x", "--invalid-gender", help="Výstupní soubor pro nevalidní pohlaví", type=str)
+	parser.add_argument("-X", "--invalid-inflection", help="Výstupní soubor pro chybějící nebo nevalidní skloňování", type=str)
 	parser.add_argument("-p", "--parafile", help="Soubor se vzory", type=str)
 	parser.add_argument("-l", "--lpnfile", help="Soubor obsahující vzory slov", type=str)
 	parser.add_argument("-s","--short",  help="Moznost vypisu bez znacek", action="store_true")
-   
+
 	return parser.parse_known_args()
-	
+
 def main(argv):
 	args, unknownargs = get_args()
 	init(args)
