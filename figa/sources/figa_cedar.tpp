@@ -716,7 +716,7 @@ void figa_cedar::spell_KBlookup(dict_T &dict, istream &ifs){
                     count++;                            // increase if c is 11xxxxxx or higher -> utf-8 symbol begin
                 }
                 //cout << c << "  ";
-                if(delimiter(c) || !ifs.good()){ // end at delimiter
+                if(delimiter(c) && !(word.size() == 1 && c == '.') || !ifs.good()){ // end at delimiter, except dot in initial
                     break;
                 }
                 word.push_back(c);
@@ -938,7 +938,7 @@ void figa_cedar::KBlookup(dict_T &dict, istream &ifs){
                     count++;                            // increase if c is 11xxxxxx or higher -> utf-8 symbol begin
                 }
                 //cout << c << "  ";
-                if(delimiter(c) || !ifs.good()){ // end at delimiter
+                if(delimiter(c) && !(word.size() == 1 && c == '.') || !ifs.good()){ // end at delimiter, except dot in initial
                     break;
                 }
                 word.push_back(c);
