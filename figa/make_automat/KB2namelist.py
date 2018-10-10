@@ -556,6 +556,7 @@ if __name__ == "__main__":
 			for subname in Persons.get_subnames(inflections, atm_config):
 				if subname not in dictionary:
 					dictionary[subname] = set()
+				if 'N' not in dictionary[subname]:
 					dictionary[subname].add('N')
 
 		# Pronouns with first lower and first upper with 'N'
