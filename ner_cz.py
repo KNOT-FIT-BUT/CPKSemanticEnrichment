@@ -65,6 +65,11 @@ MENTIONS_TYPE = {
     'watercourse' : {},
     'waterarea' : {},
     'geo' : {},
+    'geo:relief': {},
+    'geo:waterfall': {},
+    'geo:island': {},
+    'geo:peninsula': {},
+    'geo:continent': {},
     'organisation' : {},
     'event' : {}
     #'geo:geoplace' : {},
@@ -361,7 +366,7 @@ class Entity(object):
                 context_score = context.country_settlement_percentile(i, ent_type)
             elif ent_type in ['watercourse', 'waterarea']:
                 context_score = context.water_percentile(i, ent_type)
-            elif ent_type == 'geo':
+            elif re.match(r'geo(:[A-Za-z]+)?', ent_type):
                 context_score = context.common_percentile(i, ent_type)
             #elif ent_type == 'geoplace:protectedArea':
                 #context_score = context.prot_area_percentile(i)
