@@ -47,7 +47,7 @@ class Persons():
 		regex_prefixes_only_check = regex.compile(r"^{}\p{{Lu}}".format(tmp_prefixes), flags=regex_flags)
 		regex_prefixes_only = regex.compile(r"^{}".format(tmp_prefixes))
 
-		regex_location_remove = regex.compile("r' ({}) .*'".format("|".join(map(regex.escape, self.LOCATION_PREPOSITIONS))), flags=regex_flags)
+		regex_location_remove = regex.compile(r" ({}) .*".format("|".join(map(regex.escape, self.LOCATION_PREPOSITIONS))), flags=regex_flags)
 		regex_name = regex.compile(r"^({})?\p{{Lu}}(\p{{L}}+)?(['-]\p{{Lu}}\p{{L}}+)*$".format(tmp_prefixes), flags=regex_flags) # this should match only a nice name (must support prefixes)
 #		regex_name = regex.compile(r"({})?[A-Z][a-z-']+[a-zA-Z]*[a-z]+".format(tmp_prefixes)) # this should match only a nice name (must support prefixes)
 
