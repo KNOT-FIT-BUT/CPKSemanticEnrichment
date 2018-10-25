@@ -1,0 +1,197 @@
+S
+#Volitelná skupina přídavných jmen následovaných nutným podstatným jménem
+#Příklad: Velké Meziříčí
+#	Nové město na Moravě
+#	Ptačí oblast Králický Sněžník
+#	Andělka a Čertovka
+#	Prameniště Kateřinského potoka
+S -> NUM_ADJ_NOUN END
+#/
+
+
+#Číslovka s volitelnou skupinou přídavných jmen vázajícíh se na první ze skupiny podstatných jmén.
+#dovolujeme i číslovky mezi (příklad: Estonská první republika)
+NUM_ADJ_NOUN -> NUM_S_M ADJ_GROUP_S_M NUM_S_M LOC2_S_M NUM_S_M !NUM_ADJ_NOUN_CONTINUE
+NUM_ADJ_NOUN -> NUM_S_I ADJ_GROUP_S_I NUM_S_I LOC2_S_I NUM_S_I !NUM_ADJ_NOUN_CONTINUE
+NUM_ADJ_NOUN -> NUM_S_N ADJ_GROUP_S_N NUM_S_N LOC2_S_N NUM_S_N !NUM_ADJ_NOUN_CONTINUE
+NUM_ADJ_NOUN -> NUM_S_F ADJ_GROUP_S_F NUM_S_F LOC2_S_F NUM_S_F !NUM_ADJ_NOUN_CONTINUE
+NUM_ADJ_NOUN -> NUM_P_M ADJ_GROUP_P_M NUM_P_M LOC2_P_M NUM_P_M !NUM_ADJ_NOUN_CONTINUE
+NUM_ADJ_NOUN -> NUM_P_I ADJ_GROUP_P_I NUM_P_I LOC2_P_I NUM_P_I !NUM_ADJ_NOUN_CONTINUE
+NUM_ADJ_NOUN -> NUM_P_N ADJ_GROUP_P_N NUM_P_N LOC2_P_N NUM_P_N !NUM_ADJ_NOUN_CONTINUE
+NUM_ADJ_NOUN -> NUM_P_F ADJ_GROUP_P_F NUM_P_F LOC2_P_F NUM_P_F !NUM_ADJ_NOUN_CONTINUE
+
+!NUM_ADJ_NOUN_CONTINUE -> 1{t=L} !NUM_ADJ_NOUN_CONTINUE
+!NUM_ADJ_NOUN_CONTINUE -> 2{t=L} !NUM_ADJ_NOUN_CONTINUE
+!NUM_ADJ_NOUN_CONTINUE -> 4{t=L} !NUM_ADJ_NOUN_CONTINUE
+!NUM_ADJ_NOUN_CONTINUE -> 1{t=L} !CONJ 1{t=L}	#Např pro: Národní akademické divadlo opery a baletu
+!NUM_ADJ_NOUN_CONTINUE -> ε
+
+
+#Nevolitelná předložková skupina
+#Příklad: Pod Šibenicí
+S -> !PREP_GROUP_MANDATORY
+
+#Skupina přídavných jmen
+#Příklad: Velký a Malý Kamýk
+#	Velký a Malý Tisý	
+#	Zubří
+S -> NUM_S_M ADJ_GROUP_S_M_MANDATORY
+S -> NUM_S_M ADJ_GROUP_S_M_MANDATORY LOC2_S_M
+S -> NUM_S_I ADJ_GROUP_S_I_MANDATORY
+S -> NUM_S_I ADJ_GROUP_S_I_MANDATORY LOC2_S_I
+S -> NUM_S_N ADJ_GROUP_S_N_MANDATORY
+S -> NUM_S_N ADJ_GROUP_S_N_MANDATORY LOC2_S_N
+S -> NUM_S_F ADJ_GROUP_S_F_MANDATORY
+S -> NUM_S_F ADJ_GROUP_S_F_MANDATORY LOC2_S_F
+S -> NUM_P_M ADJ_GROUP_P_M_MANDATORY
+S -> NUM_P_M ADJ_GROUP_P_M_MANDATORY LOC2_P_M
+S -> NUM_P_I ADJ_GROUP_P_I_MANDATORY
+S -> NUM_P_I ADJ_GROUP_P_I_MANDATORY LOC2_P_I
+S -> NUM_P_N ADJ_GROUP_P_N_MANDATORY
+S -> NUM_P_N ADJ_GROUP_P_N_MANDATORY LOC2_P_N
+S -> NUM_P_F ADJ_GROUP_P_F_MANDATORY
+S -> NUM_P_F ADJ_GROUP_P_F_MANDATORY LOC2_P_F
+#/
+
+!ADVERB -> 6{t=L}
+!ADVERB -> ε
+
+END -> !PREP_GROUP !ROMAN_NUM NEXT
+
+#číslovka
+#Příklad výskytu: Devět Křížů
+NUM_S_M -> 4{c=1,t=L,n=S,g=M}
+NUM_S_M -> ε
+NUM_S_I -> 4{c=1,t=L,n=S,g=I}
+NUM_S_I -> ε
+NUM_S_N -> 4{c=1,t=L,n=S,g=N}
+NUM_S_N -> ε
+NUM_S_F -> 4{c=1,t=L,n=S,g=F}
+NUM_S_F -> ε
+NUM_P_M -> 4{c=1,t=L,n=P,g=M}
+NUM_P_M -> ε
+NUM_P_I -> 4{c=1,t=L,n=P,g=I}
+NUM_P_I -> ε
+NUM_P_N -> 4{c=1,t=L,n=P,g=N}
+NUM_P_N -> ε
+NUM_P_F -> 4{c=1,t=L,n=P,g=F}
+NUM_P_F -> ε
+#/
+
+!ROMAN_NUM -> r{t=R}
+!ROMAN_NUM -> ε
+
+#uvození spojkou dalšího jména (další části) ve jméně
+#Příklad: Jižní Georgie a Jižní Sandwichovy ostrovy
+NEXT -> !CONJ S
+NEXT -> ε
+
+!CONJ -> 8{t=8}
+
+#Skupina přídavných jmen
+# i s volitelným příslovcem
+# vhodné např pro: Etiopská lidově demokratická republika
+ADJ_GROUP_S_M_MANDATORY -> !ADVERB  2{c=1,t=L,n=S,g=M} ADJ_GROUP_S_M
+ADJ_GROUP_S_M -> !ADVERB  2{c=1,t=L,n=S,g=M} ADJ_GROUP_S_M
+ADJ_GROUP_S_M -> !ADVERB  2{c=1,t=L,n=S,g=M} !CONJ ADJ_GROUP_S_M_MANDATORY
+ADJ_GROUP_S_M -> ε
+
+ADJ_GROUP_S_I_MANDATORY -> !ADVERB  2{c=1,t=L,n=S,g=I} ADJ_GROUP_S_I
+ADJ_GROUP_S_I -> !ADVERB  2{c=1,t=L,n=S,g=I} ADJ_GROUP_S_I
+ADJ_GROUP_S_I -> !ADVERB  2{c=1,t=L,n=S,g=I} !CONJ ADJ_GROUP_S_I_MANDATORY
+ADJ_GROUP_S_I -> ε
+
+ADJ_GROUP_S_N_MANDATORY -> !ADVERB  2{c=1,t=L,n=S,g=N} ADJ_GROUP_S_N
+ADJ_GROUP_S_N -> !ADVERB  2{c=1,t=L,n=S,g=N} ADJ_GROUP_S_N
+ADJ_GROUP_S_N -> !ADVERB  2{c=1,t=L,n=S,g=N} !CONJ ADJ_GROUP_S_N_MANDATORY
+ADJ_GROUP_S_N -> ε
+
+ADJ_GROUP_S_F_MANDATORY -> !ADVERB  2{c=1,t=L,n=S,g=F} ADJ_GROUP_S_F
+ADJ_GROUP_S_F -> !ADVERB  2{c=1,t=L,n=S,g=F} ADJ_GROUP_S_F
+ADJ_GROUP_S_F -> !ADVERB  2{c=1,t=L,n=S,g=F} !CONJ ADJ_GROUP_S_F_MANDATORY
+ADJ_GROUP_S_F -> ε
+
+ADJ_GROUP_P_M_MANDATORY -> !ADVERB  2{c=1,t=L,n=P,g=M} ADJ_GROUP_P_M
+ADJ_GROUP_P_M -> !ADVERB  2{c=1,t=L,n=P,g=M} ADJ_GROUP_P_M
+ADJ_GROUP_P_M -> !ADVERB  2{c=1,t=L,n=P,g=M} !CONJ ADJ_GROUP_P_M_MANDATORY
+ADJ_GROUP_P_M -> ε
+
+ADJ_GROUP_P_I_MANDATORY -> !ADVERB  2{c=1,t=L,n=P,g=I} ADJ_GROUP_P_I
+ADJ_GROUP_P_I -> !ADVERB  2{c=1,t=L,n=P,g=I} ADJ_GROUP_P_I
+ADJ_GROUP_P_I -> !ADVERB  2{c=1,t=L,n=P,g=I} !CONJ ADJ_GROUP_P_I_MANDATORY
+ADJ_GROUP_P_I -> ε
+
+ADJ_GROUP_P_N_MANDATORY -> !ADVERB  2{c=1,t=L,n=P,g=N} ADJ_GROUP_P_N
+ADJ_GROUP_P_N -> !ADVERB  2{c=1,t=L,n=P,g=N} ADJ_GROUP_P_N
+ADJ_GROUP_P_N -> !ADVERB  2{c=1,t=L,n=P,g=N} !CONJ ADJ_GROUP_P_N_MANDATORY
+ADJ_GROUP_P_N -> ε
+
+ADJ_GROUP_P_F_MANDATORY -> !ADVERB  2{c=1,t=L,n=P,g=F} ADJ_GROUP_P_F
+ADJ_GROUP_P_F -> !ADVERB  2{c=1,t=L,n=P,g=F} ADJ_GROUP_P_F
+ADJ_GROUP_P_F -> !ADVERB  2{c=1,t=L,n=P,g=F} !CONJ ADJ_GROUP_P_F_MANDATORY
+ADJ_GROUP_P_F -> ε
+#/
+
+#Podstatné jméno následováno volitelnými ne/ohebnými podstatnými jmény
+#pokud je podsatné jméno ve druhém pádě, tak je neohebné. Pokud v 1. tak je ohebné.
+#Příklad: Rozhledna VLadimíra Menšíka
+LOC2_S_M -> 1{c=1,t=L,n=S,g=M} !VOLUNTARY_NO_FLEX_N
+LOC2_S_M -> 1{c=1,t=L,n=S,g=M} LOC2_S_M_CONTINUE
+LOC2_S_M_CONTINUE -> 1{c=1,t=L,n=S,g=M}
+LOC2_S_M_CONTINUE ->ε
+
+LOC2_S_I -> 1{c=1,t=L,n=S,g=I} !VOLUNTARY_NO_FLEX_N
+LOC2_S_I -> 1{c=1,t=L,n=S,g=I} LOC2_S_I_CONTINUE
+LOC2_S_I_CONTINUE -> 1{c=1,t=L,n=S,g=I}
+LOC2_S_I_CONTINUE -> ε
+
+LOC2_S_N -> 1{c=1,t=L,n=S,g=N} !VOLUNTARY_NO_FLEX_N
+LOC2_S_N -> 1{c=1,t=L,n=S,g=N} LOC2_S_N_CONTINUE
+LOC2_S_N_CONTINUE -> 1{c=1,t=L,n=S,g=N}
+LOC2_S_N_CONTINUE -> ε
+
+LOC2_S_F -> 1{c=1,t=L,n=S,g=F} !VOLUNTARY_NO_FLEX_N
+LOC2_S_F -> 1{c=1,t=L,n=S,g=F} LOC2_S_F_CONTINUE
+LOC2_S_F_CONTINUE -> 1{c=1,t=L,n=S,g=F}
+LOC2_S_F_CONTINUE -> ε
+
+LOC2_P_M -> 1{c=1,t=L,n=P,g=M} !VOLUNTARY_NO_FLEX_N
+LOC2_P_M -> 1{c=1,t=L,n=P,g=M} LOC2_P_M_CONTINUE
+LOC2_P_M_CONTINUE -> 1{c=1,t=L,n=P,g=M}
+LOC2_P_M_CONTINUE -> ε
+
+LOC2_P_I -> 1{c=1,t=L,n=P,g=I} !VOLUNTARY_NO_FLEX_N
+LOC2_P_I -> 1{c=1,t=L,n=P,g=I} LOC2_P_I_CONTINUE
+LOC2_P_I_CONTINUE -> 1{c=1,t=L,n=P,g=I}
+LOC2_P_I_CONTINUE -> ε
+
+LOC2_P_N -> 1{c=1,t=L,n=P,g=N} !VOLUNTARY_NO_FLEX_N
+LOC2_P_N -> 1{c=1,t=L,n=P,g=N} LOC2_P_N_CONTINUE
+LOC2_P_N_CONTINUE -> 1{c=1,t=L,n=P,g=N}
+LOC2_P_N_CONTINUE -> ε
+
+LOC2_P_F -> 1{c=1,t=L,n=P,g=F} !VOLUNTARY_NO_FLEX_N
+LOC2_P_F -> 1{c=1,t=L,n=P,g=F} LOC2_P_F_CONTINUE
+LOC2_P_F_CONTINUE -> 1{c=1,t=L,n=P,g=F}
+LOC2_P_F_CONTINUE -> ε
+
+
+!VOLUNTARY_NO_FLEX_N -> 1{c=2,t=L} !VOLUNTARY_NO_FLEX_N
+!VOLUNTARY_NO_FLEX_N -> ε
+#/
+
+
+
+#Předložková skupina
+!PREP_GROUP_MANDATORY -> 7{t=7} !AFTER_PREP
+!PREP_GROUP -> 7{t=7} !AFTER_PREP
+!PREP_GROUP -> ε
+!AFTER_PREP -> 1{t=L} !AFTER_PREP_ENDING
+!AFTER_PREP -> 2{t=L} !AFTER_PREP_ENDING
+!AFTER_PREP -> 4{t=L} !AFTER_PREP_ENDING
+!AFTER_PREP -> 7{t=L} !AFTER_PREP
+!AFTER_PREP -> 8{t=8} !AFTER_PREP
+!AFTER_PREP -> r{t=R} !AFTER_PREP_ENDING
+!AFTER_PREP_ENDING -> !AFTER_PREP
+!AFTER_PREP_ENDING -> ε
+#/
