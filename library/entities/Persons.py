@@ -12,6 +12,7 @@ from library.utils import remove_accent
 class Persons():
 	FORBIDDEN_NAMES = ["Pán", "Paní", "Svatý", "Svatá"]
 	LOCATION_PREPOSITIONS = ["z", "ze", "of"]
+	LOCATION_PREPOSITIONS_CONJUNCITIONS = ["a", "and"]
 	NAME_PREPOSITIONS = ["van der", "van", # Dutch / Flemish
 					     "von", "zu",      # Germany
 					     "de", "du",       # French
@@ -23,13 +24,13 @@ class Persons():
 
 
 	@classmethod
-	def get_subnames(self, whole_names, config = AutomataVariants.DEFAULT):
+	def get_normalized_subnames(self, src_names, separate_to_names = False, config = AutomataVariants.DEFAULT):
 		'''
-		From a list of whole names for a given person, it creates a set of all possible subnames.
+		From a list of surnames for a given person, it creates a set of all possible surnames variants respecting settings of lowercase / non-accent / ..
 		For example:
-		   * "Václav Havel" => ["Václav", "Havel"]
-		   * "Elizabeth O'Connor" => ["Elizabeth", "O'Connor", "Connor"]
-		   * "Ludwig van Beethoven => ["Ludwig", "Beethoven", "van Beethoven"]
+		   * ["Havel"] => ["Havel"]
+		   * ["O'Connor"] => ["O'Connor", "Connor"]
+		   * ["van Beethoven"] => ["Ludwig", "Beethoven", "van Beethoven"]
 		'''
 
 		if AutomataVariants.isLowercase(config):
@@ -47,37 +48,43 @@ class Persons():
 		regex_prefixes_only_check = regex.compile(r"^{}\p{{Lu}}".format(tmp_prefixes), flags=regex_flags)
 		regex_prefixes_only = regex.compile(r"^{}".format(tmp_prefixes))
 
-		regex_location_remove = regex.compile(r" ({}) .*".format("|".join(map(regex.escape, self.LOCATION_PREPOSITIONS))), flags=regex_flags)
-		regex_name = regex.compile(r"^({})?\p{{Lu}}(\p{{L}}+)?(['-]\p{{Lu}}\p{{L}}+)*$".format(tmp_prefixes), flags=regex_flags) # this should match only a nice name (must support prefixes)
+		str_regex_location_remove = r" (?:{}) .*".format("|".join(map(regex.escape, self.LOCATION_PREPOSITIONS)))
+		regex_location_remove = regex.compile(str_regex_location_remove, flags=regex_flags)
+		regex_name = regex.compile(r"^(?:{})?\p{{Lu}}(\p{{L}}+)?(['-]\p{{Lu}}\p{{L}}+)*(?:{})?$".format(tmp_prefixes, str_regex_location_remove), flags=regex_flags) # this should match only a nice name (must support prefixes)
 #		regex_name = regex.compile(r"({})?[A-Z][a-z-']+[a-zA-Z]*[a-z]+".format(tmp_prefixes)) # this should match only a nice name (must support prefixes)
 
 		names = set()
 
-		for whole_name in whole_names:
+		for name in src_names:
 			# normalize whitespaces
-			whole_name = regex.sub('\s+', ' ', whole_name)
+			name = regex.sub('\s+', ' ', name)
+			subname_location = regex.search(r"([^ ]+" + str_regex_location_remove + r")", name)
+			if subname_location:
+				subname_location = subname_location.group()
 			# remove a part of the name with location information (e.g. " of Polestown" from the name "Richard Butler of Polestown")
-			whole_name = regex_location_remove.sub("", whole_name).title()
+			name = regex_location_remove.sub("", name).title()
 
-			# split the name only (without prepositions) to the parts
-			subnames = regex_prepositions_remove.sub(" ", whole_name).split()
+			if separate_to_names:
+				# split the name only (without prepositions) to the parts
+				subnames = regex_prepositions_remove.sub(" ", name).split()
+			else:
+				subnames = [name]
+
+			if subname_location:
+				subnames.append(subname_location)
 
 			for subname in subnames:
-				if subname.endswith(","):
+				if subname[-1] == ",":
 					subname = subname[:-1]
 
 				# skip invalid / forbidden names
 				if subname not in self.FORBIDDEN_NAMES:
 					# normalize name to start with capital, including name with prefix (for example o'... => O'...)
 					subname = subname[0].upper() + subname[1:]
-#					# remove accent, because python re module doesn't support [A-Z] for Unicode
+					# remove accent, because python re module doesn't support [A-Z] for Unicode
 					subname_without_accent = remove_accent(subname)
-#					result = regex_name.match(subname_without_accent)
 					result = regex_name.match(subname)
 					if result:
-						match = result.group()
-#						if match == subname_without_accent:
-
 						# add non-accent variant (if required) to processing (only if not same as base name)
 						for subname in [subname, subname_without_accent] if (AutomataVariants.isNonaccent(config) and subname != subname_without_accent) else [subname]:
 							if (AutomataVariants.isLowercase(config)):
@@ -93,7 +100,7 @@ class Persons():
 								names.add(nonprefix.lower() if AutomataVariants.isLowercase(config) else nonprefix.capitalize())
 
 			# search for names with preposition, i.e. "van Eyck"
-			preposition_name = regex_prepositions_name.search(whole_name.title())
+			preposition_name = regex_prepositions_name.search(name.title())
 			if preposition_name:
 				match = preposition_name.group()
 

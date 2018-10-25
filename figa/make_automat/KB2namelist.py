@@ -18,6 +18,7 @@ limitations under the License.
 """
 
 # Author: Lubomir Otrusina, iotrusina@fit.vutbr.cz
+# Author: Tomáš Volf, ivolf@fit.vutbr.cz
 #
 # Description: Creates namelist from KB.
 
@@ -26,25 +27,30 @@ import argparse
 import os
 import regex
 import sys
+from importlib import reload
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+reload(sys)
+
 from library.config import AutomataVariants
 from library.utils import remove_accent
 from library.entities.Persons import Persons
-from importlib import reload
 from natToKB import NatToKB
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 import metrics_knowledge_base
 
-reload(sys)
 
 # defining commandline arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("-l", "--lowercase", action="store_true", help="creates a lowercase list")
 parser.add_argument("-a", "--autocomplete", action="store_true", help="creates a list for autocomplete")
 parser.add_argument("-u", "--uri", action="store_true", help="creates an uri list")
+parser.add_argument("--czechnames", help="czechnames file path (suitable for debug)")
 args = parser.parse_args()
+
 
 # a dictionary for storing results
 dictionary = {}
+# a set for storing subnames results
+g_subnames = set()
 
 # automata variants config
 atm_config = AutomataVariants.DEFAULT
@@ -59,23 +65,68 @@ kb_struct = metrics_knowledge_base.KnowledgeBase()
 # multiple values delimiter
 KB_MULTIVALUE_DELIM = metrics_knowledge_base.KB_MULTIVALUE_DELIM
 
-def load_name_inflections(cznames_file):
-	result = {}
+#SURNAME_MATCH = regex.compile(r"(((?<=^)|(?<=[ ]))(da |von )?((\p{Lu}\p{Ll}*-)?(\p{Lu}\p{Ll}+))$)")
+#UNWANTED_MATCH = regex.compile(r"(Princ|Svatý|,|z|[0-9])")
+
+
+''' For firstnames or surnames it creates subnames of each separate name and also all names together '''
+def get_subnames_from_parts(subname_parts):
+	subnames = set()
+	subname_all = ''
+	for subname_part in subname_parts:
+		subname_part = regex.sub(r'#[A-Za-z0-9]( |$)', '\g<1>', subname_part)
+		subnames.add(subname_part)
+		if subname_all:
+			subname_part = ' ' + subname_part
+		subname_all += subname_part
+
+	subnames.add(subname_all)
+	return subnames
+
+
+def build_name_variant(inflection_parts, i_inflection_part, stacked_name, name_inflections):
+	subnames = set()
+	separator = ''
+	if i_inflection_part < len(inflection_parts):
+		for inflected_part in inflection_parts[i_inflection_part]:
+			if stacked_name and inflected_part:
+				separator = ' '
+			name_inflections, built_subnames = build_name_variant(inflection_parts, i_inflection_part + 1, stacked_name + separator + inflected_part, name_inflections)
+			subnames |= built_subnames
+	else:
+		name_inflections.add(regex.sub(r'#[A-Za-z0-9]( |$)', '\g<1>', stacked_name))
+		subnames |= get_subnames_from_parts(regex.findall(r'(\p{L}+#G)', stacked_name))
+		subnames |= get_subnames_from_parts(regex.findall(r'(\p{L}+#S(?: \p{L}+#[L78])*)', stacked_name))
+		subnames = Persons.get_normalized_subnames(subnames)
+	return [name_inflections, subnames]
+
+
+def process_czechnames(cznames_file):
+	global g_subnames
+	name_inflections = {}
 
 	with open(cznames_file) as f:
 		for line in f:
 			if line:
 				line = line.strip('\n').split('\t')
 				name = line[0]
-				aliases = line[2].split('|') if line[2] != '' else []
-				aliases = [a.split('#')[0] for a in aliases]
+				inflections = line[2].split('|') if line[2] != '' else []
+				for infl in inflections:
+					inflection_parts = {}
+					for i_infl_part, infl_part in enumerate(infl.split(' ')):
+						inflection_parts[i_infl_part] = set()
+						for infl_part_variant in infl_part.split('/'):
+							#clean_name = regex.sub(r'(\p{L}*)(\[[^\]]+\])?(#[A-Za-z0-9])?', '\g<1>', infl_part_variant)
+							inflection_parts[i_infl_part].add(regex.sub(r'(\p{L}*)(\[[^\]]+\])?', '\g<1>', infl_part_variant))
+					if name not in name_inflections:
+						name_inflections[name] = set()
+					built_name_inflections, built_subnames = build_name_variant(inflection_parts, 0, "", set())
+					name_inflections[name] |= built_name_inflections
+					g_subnames |= built_subnames
+				if len(inflections) == 0:
+					g_subnames |= Persons.get_normalized_subnames([name], True)
 
-				if name not in result:
-					result[name] = set()
-
-				for a in aliases:
-					result[name].add(a)
-	return result
+	return name_inflections
 
 def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 	"""
@@ -85,6 +136,7 @@ def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 	 _value : the line number (from the KB) corresponding to a given entity
 	 _type : the type of a given entity
 	"""
+	global g_subnames
 
 	# removing white spaces
 	_key = regex.sub('\s+', ' ', _key).strip()
@@ -132,108 +184,92 @@ def add_to_dictionary(_key, _value, _type, _fields, alt_names):
 			if len(regex.findall(r"[.,]$", _key)) != 0:
 				return
 
-	# adding name into the dictionary
-	add(_key, _value, _type)
-
-	# generating permutations for person and artist names
+	# Get all inflection variants of key
+	key_inflections = None
 	if _type in ["person", "person:artist", "person:fictional"]:
-		length = _key.count(" ") + 1
-		if length <= 4 and length > 1:
-			parts = _key.split(" ")
-			# if a name contains any of these words, we will not create permutations
-			if not (set(parts) & set(["van", "von"])):
-				names = list(itertools.permutations(parts))
-				for x in names:
-					r = " ".join(x)
-					add(_key, _value, _type)
-
-		alternatives = None
 		if _key in alt_names:
-			alternatives = alt_names[_key]
+			key_inflections = alt_names[_key]
+	if not key_inflections:
+		key_inflections = set([_key]) # TODO alternative names are not in subnames
+		g_subnames |= Persons.get_normalized_subnames(set([_key]), True)
 
-		if alternatives:
-			for a in alternatives:
-				add(a, _value, _type)
 
-	# adding various alternatives for given types
-	if _type in ["person", "person:artist", "person:fictional", 'organisation'] or _type.startswith('geo'):
-		if "Svatý " in _key:
-			add(regex.sub(r"Svatý ", "Sv. ", _key), _value, _type) # Saint John -> Sv. John
-			add(regex.sub(r"Svatý ", "Sv.", _key), _value, _type) # Saint John -> Sv.John
-			add(regex.sub(r"Svatý ", "Sv ", _key), _value, _type) # Saint John -> Sv John
-		if "Sv " in _key:
-			add(regex.sub(r"Sv ", "Sv. ", _key), _value, _type) # St John -> St. John
-			add(regex.sub(r"Sv ", "Sv.", _key), _value, _type) # St John -> St.John
-			add(regex.sub(r"Sv ", "Svatý ", _key), _value, _type) # St John -> Saint John
-		if "Sv." in _key:
-			if "Sv. " in _key:
-				add(regex.sub(r"Sv\. ", "Sv ", _key), _value, _type) # St. John -> St John
-				add(regex.sub(r"Sv\. ", "Sv.", _key), _value, _type) # St. John -> St.John
-				add(regex.sub(r"Sv\. ", "Svatý ", _key), _value, _type) # St. John -> Saint John
-			else:
-				add(regex.sub(r"Sv\.", "Sv ", _key), _value, _type) # St.John -> St John
-				add(regex.sub(r"Sv\.", "Sv. ", _key), _value, _type) # St.John -> St. John
-				add(regex.sub(r"Sv\.", "Svatý ", _key), _value, _type) # St.John -> Saint John
+	# All following transformatios will be performed for each of inflection variant of key_inflection
+	for key_inflection in key_inflections:
+		# adding name into the dictionary
+		add(key_inflection, _value, _type)
 
-	if _type in ["person", "person:artist", "person:fictional"]:
-		add(regex.sub(r"(\p{Lu})\p{Ll}* (\p{Lu}\p{Ll}*)", "\g<1>. \g<2>", _key), _value, _type) # Adolf Born -> A. Born
-		add(regex.sub(r"(\p{Lu})\p{Ll}* (\p{Lu})\p{Ll}* (\p{Lu}\p{Ll}*)", "\g<1>. \g<2>. \g<3>", _key), _value, _type) # Peter Paul Rubens -> P. P. Rubens
-		add(regex.sub(r"(\p{Lu}\p{Ll}*) (\p{Lu})\p{Ll}* (\p{Lu}\p{Ll}*)", "\g<1> \g<2>. \g<3>", _key), _value, _type) # Peter Paul Rubens -> Peter P. Rubens
-		if "Mc" in _key:
-			add(regex.sub(r"Mc(\p{Lu})", "Mc \g<1>", _key), _value, _type) # McCollum -> Mc Collum
-			add(regex.sub(r"Mc (\p{Lu})", "Mc\g<1>", _key), _value, _type) # Mc Collum -> McCollum
-		if "." in _key:
-			new_key = regex.sub(r"(\p{Lu})\. (?=\p{Lu})", "\g<1>.", _key) # J. M. W. Turner -> J.M.W.Turner
-			add(new_key, _value, _type)
-			new_key = regex.sub(r"(\p{Lu})\.(?=\p{Lu}\p{Ll}+)", "\g<1>. ", new_key) # J.M.W.Turner -> J.M.W. Turner
-			add(new_key, _value, _type)
-			add(regex.sub(r"\.", "", new_key), _value, _type) # J.M.W. Turner -> JMW Turner
-		if "-" in _key:
-			add(regex.sub(r"\-", " ", _key), _value, _type) # Payne-John Christo -> Payne John Christo
-		if "ì" in _key:
-			add(regex.sub("ì", "í", _key), _value, _type) # Melozzo da Forlì -> Melozzo da Forlí
+		# generating permutations for person and artist names
+		if _type in ["person", "person:artist", "person:fictional"]:
+			length = key_inflection.count(" ") + 1
+			if length <= 4 and length > 1:
+				parts = key_inflection.split(" ")
+				# if a name contains any of these words, we will not create permutations
+				if not (set(parts) & set(["van", "von"])):
+					names = list(itertools.permutations(parts))
+					for x in names:
+						r = " ".join(x)
+						add(key_inflection, _value, _type)
 
-		parts = _key.split(" ")
-		# if a name contains any of these words, we will not create permutations
-		if not (set(parts) & set(["von", "van"])):
-			for x in f_name:
-				if x in _key:
-					new_key = regex.sub(' ?,? ' + x + '$', '', _key) # John Brown, Jr. -> John Brown
-					new_key = regex.sub('^' + x + ' ', '', new_key) # Sir Patrick Stewart -> Patrick Stewart
-					if new_key.count(' ') >= 1:
-						add(new_key, _value, _type)
+		# adding various alternatives for given types
+		if _type in ["person", "person:artist", "person:fictional", 'organisation'] or _type.startswith('geo'):
+			re_saint = r'Svat(á|é|ého|ém|ému|í|ou|ý|ých|ým|ými) '
+			if regex.search(r'(' + re_saint + r'|Sv |Sv\. ?)', key_inflection) is not None:
+				add(regex.sub(r'(' + re_saint + r'|Sv |Sv\.)', 'Sv. ', key_inflection), _value, _type) # Svatý Jan / Sv.Jan / Sv Jan -> Sv. Jan
+				add(regex.sub(r'(' + re_saint + r'|Sv |Sv\. )', 'Sv.', key_inflection), _value, _type) # Svatý Jan / Sv. Jan / Sv Jan -> Sv.Jan
+				add(regex.sub(r'(' + re_saint + r'|Sv\. ?)', 'Sv ', key_inflection), _value, _type) # Svatý Jan / Sv. Jan / Sv.Jan -> Sv Jan
+				# TODO: base form for female and middle-class
+				add(regex.sub(r'(Sv\. ?|Sv )', 'Svatý ', key_inflection), _value, _type) # Sv. Jan / Sv.Jan / Sv Jan -> Svatý Jan
 
-	if _type in ["settlement", "watercourse"]:
-		description = kb_struct.get_data_for(_fields, 'DESCRIPTION')
-		if _key in description:
-			if _type == 'settlement':
-				country = kb_struct.get_data_for(_fields, 'COUNTRY')
-			elif _type == 'watercourse':
-				country = kb_struct.get_data_for(_fields, 'SOURCE_LOC')
-			if country and country not in _key:
-				add(_key + ", " + country, _value, _type) # Peking -> Peking, China
-				add(regex.sub("United States", "US", _key + ", " + country), _value, _type)
+		if _type in ["person", "person:artist", "person:fictional"]:
+			add(regex.sub(r"(\p{Lu})\p{Ll}+ (\p{Lu}\p{Ll}+)", "\g<1>. \g<2>", key_inflection), _value, _type) # Adolf Born -> A. Born
+			add(regex.sub(r"(\p{Lu})\p{Ll}+ (\p{Lu})\p{Ll}+ (\p{Lu}\p{Ll}+)", "\g<1>. \g<2>. \g<3>", key_inflection), _value, _type) # Peter Paul Rubens -> P. P. Rubens
+			add(regex.sub(r"(\p{Lu}\p{Ll}+) (\p{Lu})\p{Ll}+ (\p{Lu}\p{Ll}+)", "\g<1> \g<2>. \g<3>", key_inflection), _value, _type) # Peter Paul Rubens -> Peter P. Rubens
+			if "Mc" in key_inflection:
+				add(regex.sub(r"Mc(\p{Lu})", "Mc \g<1>", key_inflection), _value, _type) # McCollum -> Mc Collum
+				add(regex.sub(r"Mc (\p{Lu})", "Mc\g<1>", key_inflection), _value, _type) # Mc Collum -> McCollum
+			if "." in key_inflection:
+				new_key_inflection = regex.sub(r"(\p{Lu})\. (?=\p{Lu})", "\g<1>.", key_inflection) # J. M. W. Turner -> J.M.W.Turner
+				add(new_key_inflection, _value, _type)
+				new_key_inflection = regex.sub(r"(\p{Lu})\.(?=\p{Lu}\p{Ll}+)", "\g<1>. ", newkey_inflection) # J.M.W.Turner -> J.M.W. Turner
+				add(new_key_inflection, _value, _type)
+				add(regex.sub(r"\.", "", new_key_inflection), _value, _type) # J.M.W. Turner -> JMW Turner
+			if "-" in key_inflection:
+				add(regex.sub(r"\-", " ", key_inflection), _value, _type) # Payne-John Christo -> Payne John Christo
+			if "ì" in key_inflection:
+				add(regex.sub("ì", "í", key_inflection), _value, _type) # Melozzo da Forlì -> Melozzo da Forlí
 
-	#if _type in ["event"]:
-	#	if len(regex.findall(r"^[0-9]{4} (Summer|Winter) Olympics$", _key)) != 0:
-	#		location = kb_struct.get_data_for(_fields, 'LOCATION')
-	#		year = kb_struct.get_data_for(_fields, 'START DATE')[:4]
-	#		if year and location and "|" not in location:
-	#			add("Olympics in " + location + " in " + year, _value, _type) # 1928 Summer Olympics -> Olympics in Amsterdam in 1928
-	#			add("Olympics in " + year + " in " + location, _value, _type) # 1928 Summer Olympics -> Olympics in 1928 in Amsterdam
-	#			add("Olympic Games in " + location + " in " + year, _value, _type) # 1928 Summer Olympics -> Olympic Games in Amsterdam in 1928
-	#			add("Olympic Games in " + year + " in " + location, _value, _type) # 1928 Summer Olympics -> Olympic Games in 1928 in Amsterdam
+			parts = key_inflection.split(" ")
+			# if a name contains any of these words, we will not create permutations
+			if not (set(parts) & set(["von", "van"])):
+				for x in f_name:
+					if x in key_inflection:
+						new_key_inflection = regex.sub(' ?,? ' + x + '$', '', key_inflection) # John Brown, Jr. -> John Brown
+						new_key_inflection = regex.sub('^' + x + ' ', '', new_key_inflection) # Sir Patrick Stewart -> Patrick Stewart
+						if new_key_inflection.count(' ') >= 1:
+							add(new_key_inflection, _value, _type)
 
-	#if _type in ["geoplace:populatedPlace", 'geoplace:mountain', 'geoplace:castle', 'geoplace:lake', 'geo:mountainRange', 'geoplace:observationTower', 'geoplace:waterfall']:
-	#	description = kb_struct.get_data_for(_fields, 'DESCRIPTION')
-	#	if _key in description:
-	#		if _type == 'geoplace:populatedPlace':
-	#			country = kb_struct.get_data_for(_fields, 'LOCATION')
-	#		else:
-	#			country = kb_struct.get_data_for(_fields, 'COUNTRY')
-	#		if country not in _key:
-	#			add(_key + ", " + country, _value, _type) # Peking -> Peking, China
-	#			add(regex.sub("United States", "US", _key + ", " + country), _value, _type)
+		if _type in ["settlement", "watercourse"]:
+			description = kb_struct.get_data_for(_fields, 'DESCRIPTION')
+			if key_inflection in description:
+				if _type == 'settlement':
+					country = kb_struct.get_data_for(_fields, 'COUNTRY')
+				elif _type == 'watercourse':
+					country = kb_struct.get_data_for(_fields, 'SOURCE_LOC')
+				if country and country not in key_inflection:
+					add(key_inflection + ", " + country, _value, _type) # Peking -> Peking, China
+					add(regex.sub("United States", "US", key_inflection + ", " + country), _value, _type)
+
+		#if _type in ["event"]:
+		#	if len(regex.findall(r"^[0-9]{4} (Summer|Winter) Olympics$", key_inflection)) != 0:
+		#		location = kb_struct.get_data_for(_fields, 'LOCATION')
+		#		year = kb_struct.get_data_for(_fields, 'START DATE')[:4]
+		#		if year and location and "|" not in location:
+		#			add("Olympics in " + location + " in " + year, _value, _type) # 1928 Summer Olympics -> Olympics in Amsterdam in 1928
+		#			add("Olympics in " + year + " in " + location, _value, _type) # 1928 Summer Olympics -> Olympics in 1928 in Amsterdam
+		#			add("Olympic Games in " + location + " in " + year, _value, _type) # 1928 Summer Olympics -> Olympic Games in Amsterdam in 1928
+		#			add("Olympic Games in " + year + " in " + location, _value, _type) # 1928 Summer Olympics -> Olympic Games in 1928 in Amsterdam
+
 
 def add(_key, _value, _type):
 	"""
@@ -270,16 +306,14 @@ def add(_key, _value, _type):
 		dictionary[_key] = set()
 	dictionary[_key].add(_value)
 
-	# removing accent
-#	_accent = remove_accent(_key)
 
-	# adding the name without accent into the dictionary
-#	if _accent not in dictionary:
-#		dictionary[_accent] = set()
-#	dictionary[_accent].add(_value)
+""" Processes a line with entity of argument determined type. """
+def add_line_of_type_to_dictionary(_fields, _line_num, alt_names, _type):
+	aliases = kb_struct.get_data_for(_fields, 'ALIASES').split(KB_MULTIVALUE_DELIM)
+	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
+	for t in aliases:
+		add_to_dictionary(t, _line_num, _type, _fields)
 
-SURNAME_MATCH = regex.compile(r"(((?<=^)|(?<=[ ]))(da |von )?((\p{Lu}\p{Ll}*-)?(\p{Lu}\p{Ll}+))$)")
-UNWANTED_MATCH = regex.compile(r"(Princ|Svatý|,|z|[0-9])")
 
 def process_person(_fields, _line_num, alt_names):
 	""" Processes a line with entity of person type. """
@@ -304,6 +338,7 @@ def process_person(_fields, _line_num, alt_names):
 #		if surname_match and not unwanted_match:
 #			surname = surname_match.group(0)
 #			add_to_dictionary(surname, _line_num, "person", _fields, alt_names)
+
 
 def process_artist(_fields, _line_num, alt_names):
 	""" Processes a line with entity of artist type. """
@@ -349,76 +384,49 @@ def process_fictional(_fields, _line_num, alt_names):
 #			add_to_dictionary(surname, _line_num, "person:artist", _fields, alt_names)
 
 def process_other(_fields, _line_num, alt_names):
-	""" Processes a line with entity of location type. """
+	""" Processes a line with entity of other type. """
 
-	aliases = kb_struct.get_data_for(_fields, 'ALIASES').split(KB_MULTIVALUE_DELIM)
-	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
-	for t in aliases:
-		add_to_dictionary(t, _line_num, _fields[1], _fields, alt_names)
+	add_line_of_type_to_dictionary(_fields, _line_num, alt_names, _fields[1])
 
 def process_location(_fields, _line_num):
 	""" Processes a line with entity of location type. """
 
-	aliases = kb_struct.get_data_for(_fields, 'ALIASES').split(KB_MULTIVALUE_DELIM)
-	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
-	for t in aliases:
-		add_to_dictionary(t, _line_num, "location", _fields)
+	add_line_of_type_to_dictionary(_fields, _line_num, alt_names, "location")
 
 def process_artwork(_fields, _line_num):
 	""" Processes a line with entity of artwork type. """
 
-	aliases = kb_struct.get_data_for(_fields, 'ALIASES').split(KB_MULTIVALUE_DELIM)
-	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
-	for t in aliases:
-		add_to_dictionary(t, _line_num, "artwork", _fields)
+	add_line_of_type_to_dictionary(_fields, _line_num, alt_names, "artwork")
 
 def process_museum(_fields, _line_num):
 	""" Processes a line with entity of museum type. """
 
-	aliases = kb_struct.get_data_for(_fields, 'ALIASES').split(KB_MULTIVALUE_DELIM)
-	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
-	for t in aliases:
-		add_to_dictionary(t, _line_num, "museum", _fields)
+	add_line_of_type_to_dictionary(_fields, _line_num, alt_names, "museum")
 
 def process_fieldsvent(_fields, _line_num):
 	""" Processes a line with entity of event type. """
 
-	aliases = kb_struct.get_data_for(_fields, 'ALIASES').split(KB_MULTIVALUE_DELIM)
-	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
-	for t in aliases:
-		add_to_dictionary(t, _line_num, "event", _fields)
+	add_line_of_type_to_dictionary(_fields, _line_num, alt_names, "event")
 
 def process_visual_art_form(_fields, _line_num):
 	""" Processes a line with entity of visual_art_form type. """
 
-	aliases = kb_struct.get_data_for(_fields, 'ALIASES').split(KB_MULTIVALUE_DELIM)
-	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
-	for t in aliases:
-		add_to_dictionary(t, _line_num, "visual_art_form", _fields)
+	add_line_of_type_to_dictionary(_fields, _line_num, alt_names, "visual_art_form")
 
 def process_visual_art_medium(_fields, _line_num):
 	""" Processes a line with entity of visual_art_medium type. """
 
-	aliases = kb_struct.get_data_for(_fields, 'ALIASES').split(KB_MULTIVALUE_DELIM)
-	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
-	for t in aliases:
-		add_to_dictionary(t, _line_num, "visual_art_medium", _fields)
+	add_line_of_type_to_dictionary(_fields, _line_num, alt_names, "visual_art_medium")
 
 def process_visual_art_genre(_fields, _line_num):
 	""" Processes a line with entity of visual_art_genre type. """
 
-	aliases = kb_struct.get_data_for(_fields, 'ALIASES').split(KB_MULTIVALUE_DELIM)
-	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
-	for t in aliases:
-		add_to_dictionary(t, _line_num, "visual_art_genre", _fields)
+	add_line_of_type_to_dictionary(_fields, _line_num, alt_names, "visual_art_genre")
 
 def process_art_period_movement(_fields, _line_num):
 	""" Processes a line with entity of art_period_movement type. """
 
-	aliases = kb_struct.get_data_for(_fields, 'ALIASES').split(KB_MULTIVALUE_DELIM)
-	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
-	for t in aliases:
-		add_to_dictionary(t, _line_num, "art_period_movement", _fields)
+	add_line_of_type_to_dictionary(_fields, _line_num, alt_names, "art_period_movement")
 
 def process_nationality(_fields, _line_num):
 	""" Processes a line with entity of nationalities type. """
@@ -440,18 +448,13 @@ def process_mythology(_fields, _line_num):
 def process_family(_fields, _line_num):
 	""" Processes a line with entity of family type. """
 
-	aliases = kb_struct.get_data_for(_fields, 'ALIASES').split(KB_MULTIVALUE_DELIM)
-	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
-	for t in aliases:
-		add_to_dictionary(t, _line_num, "family", _fields)
+	add_line_of_type_to_dictionary(_fields, _line_num, alt_names, "family")
 
 def process_group(_fields, _line_num):
 	""" Processes a line with entity of group type. """
 
-	aliases = kb_struct.get_data_for(_fields, 'ALIASES').split(KB_MULTIVALUE_DELIM)
-	aliases.append(kb_struct.get_data_for(_fields, 'NAME'))
-	for t in aliases:
-		add_to_dictionary(t, _line_num, "group", _fields)
+	add_line_of_type_to_dictionary(_fields, _line_num, alt_names, "group")
+
 
 def process_uri(_fields, _line_num):
 	""" Processes all URIs for a given entry. """
@@ -473,6 +476,7 @@ def process_uri(_fields, _line_num):
 		if u not in dictionary:
 			dictionary[u] = set()
 		dictionary[u].add(_line_num)
+
 
 if __name__ == "__main__":
 
@@ -505,7 +509,11 @@ if __name__ == "__main__":
 		with open("../../VERSION") as kb_version_file:
 			kb_version = kb_version_file.read().strip()
 
-		alternatives = load_name_inflections('czechnames_' + kb_version + '.out')
+		if args.czechnames:
+			czechnames_file = args.czechnames
+		else:
+			czechnames_file = 'czechnames_' + kb_version + '.out'
+		alternatives = process_czechnames(czechnames_file)
 
 		# processing the KB
 		line_num = 1
@@ -550,14 +558,11 @@ if __name__ == "__main__":
 			line_num += 1
 
 		# Subnames in all inflections with 'N'
-		subnames = set()
-		for base, inflections in alternatives.items():
-			inflections.add(base)
-			for subname in Persons.get_subnames(inflections, atm_config):
-				if subname not in dictionary:
-					dictionary[subname] = set()
-				if 'N' not in dictionary[subname]:
-					dictionary[subname].add('N')
+		for subname in g_subnames:
+			if subname not in dictionary:
+				dictionary[subname] = set()
+			if 'N' not in dictionary[subname]:
+				dictionary[subname].add('N')
 
 		# Pronouns with first lower and first upper with 'N'
 		pronouns = ["on", "ho", "mu", "něm", "jím", "ona", "jí", "ní"]
