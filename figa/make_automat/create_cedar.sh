@@ -102,20 +102,20 @@ export PYTHONPATH=../../:$PYTHONPATH
 
 #=====================================================================
 CURRENT_VERSION=`cat ../../VERSION`
-F_PERSONS_WITH_GENDERS="persons_with_genders_${CURRENT_VERSION}"
+F_ENTITIES_WITH_GENDERTYPE="entities_with_gendertype_${CURRENT_VERSION}"
 F_CZECHNAMES="czechnames_${CURRENT_VERSION}.out"
 F_CZECHNAMES_INVALID="${F_CZECHNAMES}.invalid"
 # temporary files to avoid skipping of generating target files, when generating failed or aborted
-F_TMP_PERSONS_WITH_GENDERS="_${F_PERSONS_WITH_GENDERS}"
+F_TMP_ENTITIES_WITH_GENDERTYPE="_${F_ENTITIES_WITH_GENDERTYPE}"
 F_TMP_CZECHNAMES="_${F_CZECHNAMES}"
 # Skip generating some files if exist, because they are very time consumed
 if ! test -f "${F_PERSONS_WITH_GENDERS}"; then
-  python get_persons_with_genders.py -p "$KB" > "${F_TMP_PERSONS_WITH_GENDERS}"
-  mv "${F_TMP_PERSONS_WITH_GENDERS}" "${F_PERSONS_WITH_GENDERS}"
+  python get_entities_with_gender_or_type.py -k "$KB" > "${F_TMP_ENTITIES_WITH_GENDERTYPE}"
+  mv "${F_TMP_ENTITIES_WITH_GENDERTYPE}" "${F_ENTITIES_WITH_GENDERTYPE}"
 fi
 
-if ! test -f "${F_CZECHNAMES}" || test `stat -c %Y "${F_CZECHNAMES}"` -lt `stat -c %Y "${F_PERSONS_WITH_GENDERS}"`; then
-  python3 czechnames/namegen.py -o "${F_TMP_CZECHNAMES}" -x "${F_CZECHNAMES_INVALID}_gender" -X "${F_CZECHNAMES_INVALID}_inflection" "${F_PERSONS_WITH_GENDERS}"
+if ! test -f "${F_CZECHNAMES}" || test `stat -c %Y "${F_CZECHNAMES}"` -lt `stat -c %Y "${F_ENTITIES_WITH_GENDERTYPE}"`; then
+  python3 czechnames/namegen.py -o "${F_TMP_CZECHNAMES}" "${F_ENTITIES_WITH_GENDERTYPE}" >"${F_TMP_CZECHNAMES}.log" 2>"${F_TMP_CZECHNAMES}.err.log" #-x "${F_CZECHNAMES_INVALID}_gender" -X "${F_CZECHNAMES_INVALID}_inflection" "${F_ENTITIES_WITH_GENDERTYPE}"
   mv "${F_TMP_CZECHNAMES}" "${F_CZECHNAMES}"
 fi
 
@@ -130,6 +130,7 @@ else
   python3 KB2namelist.py < "$KB" | tr -s ' ' > intext
 fi
 
+exit
 #=====================================================================
 # uprava stoplistu (kapitalizace a razeni)
 
