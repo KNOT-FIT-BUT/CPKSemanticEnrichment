@@ -455,16 +455,13 @@ def process_group(_fields, _line_num):
 
 def process_uri(_fields, _line_num):
 	""" Processes all URIs for a given entry. """
-
+	
 	entity_head = kb_struct.get_ent_head(_fields)
-
+	
 	uris = []
-	if 'WIKIPEDIA URL' in entity_head:
-		uris.append(kb_struct.get_data_for(_fields, 'WIKIPEDIA URL'))
-	if 'DBPEDIA URL' in entity_head:
-		uris.append(kb_struct.get_data_for(_fields, 'DBPEDIA URL'))
-	if 'FREEBASE URL' in entity_head:
-		uris.append(kb_struct.get_data_for(_fields, 'FREEBASE URL'))
+	for uri_column_name in ['WIKIPEDIA LINK', 'WIKIPEDIA URL', 'DBPEDIA URL', 'FREEBASE URL']:
+		if uri_column_name in entity_head:
+			uris.append(kb_struct.get_data_for(_fields, uri_column_name))
 	if 'OTHER URL' in entity_head:
 		uris.extend(kb_struct.get_data_for(_fields, 'OTHER URL').split(KB_MULTIVALUE_DELIM))
 	uris = [u for u in uris if u.strip() != ""]
@@ -567,13 +564,13 @@ if __name__ == "__main__":
 			pronouns += [remove_accent(pronoun) for pronoun in pronouns]
 		dictionary.update(dict.fromkeys(pronouns, 'N'))
 
-	# geting nationalities
-	ntokb = NatToKB()
-	nationalities = ntokb.get_nationalities()
-	for nat in nationalities:
-		if nat not in dictionary:
-			dictionary[nat] = set()
-		dictionary[nat].add('N')
+		# geting nationalities
+		ntokb = NatToKB()
+		nationalities = ntokb.get_nationalities()
+		for nat in nationalities:
+			if nat not in dictionary:
+				dictionary[nat] = set()
+			dictionary[nat].add('N')
 
 	# printing the output
 	for item in dictionary.items():
