@@ -722,7 +722,9 @@ void figa_cedar::spell_KBlookup(dict_T &dict, istream &ifs){
                     word_is_uri = true;
                 }
                 
-                if (word_is_uri) {
+                if (!ifs.good()) {
+                    break;
+                } else if (word_is_uri) {
                     if (delimiter(c) && ! ispunct(c)) { // end at delimiter if is not a punctiation
                         break;
                     }
@@ -730,8 +732,6 @@ void figa_cedar::spell_KBlookup(dict_T &dict, istream &ifs){
                     if (word.size() == 1 && c == '.') { // append dot to an initial
                         word.push_back(c);
                     }
-                    break;
-                } else if (!ifs.good()) {
                     break;
                 }
                 word.push_back(c);
@@ -961,13 +961,13 @@ void figa_cedar::KBlookup(dict_T &dict, istream &ifs){
                     word_is_uri = true;
                 }
                 
-                if (word_is_uri) {
+                if (!ifs.good()) {
+                    break;
+                } else if (word_is_uri) {
                     if (delimiter(c) && ! ispunct(c)) { // end at delimiter if is not a punctiation
                         break;
                     }
                 } else if (delimiter(c)) { // end at delimiter
-                    break;
-                } else if (!ifs.good()) {
                     break;
                 }
                 word.push_back(c);
