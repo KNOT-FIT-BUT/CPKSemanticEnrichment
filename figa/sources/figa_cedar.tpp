@@ -909,6 +909,8 @@ void figa_cedar::KBlookup(dict_T &dict, istream &ifs){
     t_status current;
     // variables for work with dictionary
     string word;
+    string punctiation, word_delimiter;
+    const string space = " ";
     int value = 0;
     std::size_t pos = 0;
     
@@ -964,9 +966,6 @@ void figa_cedar::KBlookup(dict_T &dict, istream &ifs){
                         break;
                     }
                 } else if (delimiter(c)) { // end at delimiter
-                    if (word.size() == 1 && c == '.') { // append dot to an initial
-                        word.push_back(c);
-                    }
                     break;
                 } else if (!ifs.good()) {
                     break;
@@ -987,7 +986,18 @@ void figa_cedar::KBlookup(dict_T &dict, istream &ifs){
                 current.value.push_back(cont);
                 // try to go on next word
                 if(value == NO_VALUE || value >= 0){
-                    value = dict.traverse(" ",current.from,pos = 0);
+                    if(ispunct(c)) {
+                        punctiation = c;
+                        word_delimiter = punctiation + space;
+                        value = dict.traverse(word_delimiter.c_str(),current.from,pos = 0);
+                        if(value != NO_VALUE && value < 0) {
+                            word_delimiter = punctiation;
+                            current.from = cont.from;
+                            value = dict.traverse(word_delimiter.c_str(),current.from,pos = 0);
+                        }
+                    } else {
+                        value = dict.traverse(" ",current.from,pos = 0);
+                    }
                 }
                 if(value == NO_VALUE || value >= 0){ // word was found in dict, with or without associated value
                     continue;
